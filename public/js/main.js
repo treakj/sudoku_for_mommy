@@ -259,7 +259,11 @@ function main() {
     setupMobileDetection();
     setupKeyboardShortcuts();
     // setupServiceWorker(); // Descomente se quiser PWA
-    initializeApp();
+    
+    // Adiciona um pequeno delay para garantir que o DOM está totalmente renderizado
+    setTimeout(() => {
+        initializeApp();
+    }, 100);
 }
 
 // Inicializa quando o DOM estiver pronto

@@ -3,7 +3,6 @@
  * Gerencia toda a lógica do jogo, renderização e interações
  */
 
-import { SudokuGenerator } from './sudoku-generator-fast.js';
 import { Validator } from './validator.js';
 import { getCurrentTranslations } from './translations.js';
 import { 
@@ -31,7 +30,58 @@ export class SudokuGame {
         // Configurações do jogo
         this.difficulty = 'medium';
         this.validator = new Validator();
-        this.generator = new SudokuGenerator();
+        
+        // Gerador simples embutido
+        this.puzzles = {
+            easy: {
+                puzzle: [
+                    [5, 3, 0, 0, 7, 0, 0, 0, 0],
+                    [6, 0, 0, 1, 9, 5, 0, 0, 0],
+                    [0, 9, 8, 0, 0, 0, 0, 6, 0],
+                    [8, 0, 0, 0, 6, 0, 0, 0, 3],
+                    [4, 0, 0, 8, 0, 3, 0, 0, 1],
+                    [7, 0, 0, 0, 2, 0, 0, 0, 6],
+                    [0, 6, 0, 0, 0, 0, 2, 8, 0],
+                    [0, 0, 0, 4, 1, 9, 0, 0, 5],
+                    [0, 0, 0, 0, 8, 0, 0, 7, 9]
+                ],
+                solution: [
+                    [5, 3, 4, 6, 7, 8, 9, 1, 2],
+                    [6, 7, 2, 1, 9, 5, 3, 4, 8],
+                    [1, 9, 8, 3, 4, 2, 5, 6, 7],
+                    [8, 5, 9, 7, 6, 1, 4, 2, 3],
+                    [4, 2, 6, 8, 5, 3, 7, 9, 1],
+                    [7, 1, 3, 9, 2, 4, 8, 5, 6],
+                    [9, 6, 1, 5, 3, 7, 2, 8, 4],
+                    [2, 8, 7, 4, 1, 9, 6, 3, 5],
+                    [3, 4, 5, 2, 8, 6, 1, 7, 9]
+                ]
+            },
+            medium: {
+                puzzle: [
+                    [0, 0, 0, 6, 0, 0, 4, 0, 0],
+                    [7, 0, 0, 0, 0, 3, 6, 0, 0],
+                    [0, 0, 0, 0, 9, 1, 0, 8, 0],
+                    [0, 0, 0, 0, 0, 0, 0, 0, 0],
+                    [0, 5, 0, 1, 8, 0, 0, 0, 3],
+                    [0, 0, 0, 3, 0, 6, 0, 4, 5],
+                    [0, 4, 0, 2, 0, 0, 0, 6, 0],
+                    [9, 0, 3, 0, 0, 0, 0, 0, 0],
+                    [0, 2, 0, 0, 0, 0, 1, 0, 0]
+                ],
+                solution: [
+                    [5, 8, 1, 6, 7, 2, 4, 3, 9],
+                    [7, 9, 2, 8, 4, 3, 6, 5, 1],
+                    [3, 6, 4, 5, 9, 1, 7, 8, 2],
+                    [4, 3, 8, 9, 5, 7, 2, 1, 6],
+                    [2, 5, 6, 1, 8, 4, 9, 7, 3],
+                    [1, 7, 9, 3, 2, 6, 8, 4, 5],
+                    [8, 4, 5, 2, 1, 9, 3, 6, 7],
+                    [9, 1, 3, 7, 6, 8, 5, 2, 4],
+                    [6, 2, 7, 4, 3, 5, 1, 9, 8]
+                ]
+            }
+        };
         
         // Estado do jogo
         this.selected = { row: -1, col: -1 };
@@ -52,7 +102,8 @@ export class SudokuGame {
         this.historySystem = null;
         this.hintsSystem = null;
         
-        this.init();
+        // Força inicialização imediata
+        setTimeout(() => this.init(), 0);
     }
 
     /**
@@ -60,8 +111,17 @@ export class SudokuGame {
      */
     init() {
         this.setupCanvas();
+        
+        // Desenha um grid vazio imediatamente
+        this.drawInitialGrid();
+        
+        // Inicializa sistemas avançados de forma assíncrona
         this.initializeAdvancedSystems();
+        
+        // Inicia o jogo
         this.startNewGame();
+        
+        // Adiciona event listeners
         this.addEventListeners();
         
         // Adiciona listener para redimensionamento com debounce
@@ -130,20 +190,39 @@ export class SudokuGame {
     }
 
     /**
+     * Desenha um grid inicial vazio para mostrar que o jogo está carregado
+     */
+    drawInitialGrid() {
+        this.ctx.clearRect(0, 0, this.boardSize, this.boardSize);
+        this.drawGrid();
+        
+        // Desenha texto "Carregando..." no centro
+        this.ctx.font = `${this.cellSize * 0.3}px Arial`;
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillStyle = '#999';
+        this.ctx.fillText('Carregando...', this.boardSize / 2, this.boardSize / 2);
+    }
+
+    /**
      * Inicia um novo jogo
      */
     startNewGame() {
         this.showLoader();
         
+        // Limpa o canvas e mostra estado de carregamento
+        this.drawInitialGrid();
+        
         // Usa setTimeout para não bloquear a UI durante a geração
         setTimeout(() => {
             try {
-                // Tenta gerar com o gerador rápido
-                const result = this.generator.generate(this.difficulty);
+                // Seleciona puzzle baseado na dificuldade
+                const difficultyKey = (this.difficulty === 'easy' || this.difficulty === 'facil') ? 'easy' : 'medium';
+                const selectedPuzzle = this.puzzles[difficultyKey];
                 
-                if (result && result.puzzle && result.solution) {
-                    this.initialBoard = result.puzzle;
-                    this.solution = result.solution;
+                if (selectedPuzzle && selectedPuzzle.puzzle && selectedPuzzle.solution) {
+                    this.initialBoard = selectedPuzzle.puzzle.map(row => [...row]);
+                    this.solution = selectedPuzzle.solution.map(row => [...row]);
                     this.playerBoard = this.initialBoard.map(row => [...row]);
                     this.conflicts = this.createEmptyGrid(false);
                     this.selected = { row: -1, col: -1 };
@@ -154,16 +233,21 @@ export class SudokuGame {
                     
                     this.updateHintButton();
                     this.updateConflicts();
+                    
+                    // Força o desenho imediato
                     this.draw();
                     this.hideLoader();
+                    
+                    // Força um redesenho após um breve delay
+                    setTimeout(() => this.draw(), 100);
                     
                     // Notificar início de novo jogo
                     this.dispatchGameEvent('new-game');
                 } else {
-                    throw new Error('Resultado inválido do gerador');
+                    throw new Error('Puzzle não encontrado');
                 }
             } catch (error) {
-                console.error('Erro ao gerar puzzle, usando fallback:', error);
+                console.error('Erro ao gerar puzzle:', error);
                 this.createFallbackGame();
             }
         }, 10);
@@ -209,6 +293,9 @@ export class SudokuGame {
             this.updateHintButton();
             this.updateConflicts();
             this.draw();
+            
+            // Força um redesenho após um breve delay
+            setTimeout(() => this.draw(), 100);
         } catch (error) {
             console.error('Erro crítico no fallback:', error);
         }
@@ -705,9 +792,19 @@ export class SudokuGame {
      * Desenha o tabuleiro
      */
     draw() {
+        if (!this.ctx || !this.boardSize || !this.cellSize) {
+            console.warn('Canvas não inicializado corretamente');
+            this.setupCanvas();
+            return;
+        }
+        
         this.ctx.clearRect(0, 0, this.boardSize, this.boardSize);
         this.drawGrid();
-        this.drawNumbers();
+        
+        if (this.playerBoard) {
+            this.drawNumbers();
+        }
+        
         this.drawSelection();
     }
 
@@ -749,6 +846,10 @@ export class SudokuGame {
      * Desenha os números
      */
     drawNumbers() {
+        if (!this.playerBoard) {
+            return;
+        }
+        
         this.ctx.font = `${this.cellSize * 0.6}px Arial`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
@@ -761,9 +862,9 @@ export class SudokuGame {
                     const y = row * this.cellSize + this.cellSize / 2;
                     
                     // Cor diferente para números originais vs inseridos pelo jogador
-                    if (this.initialBoard[row][col] !== 0) {
+                    if (this.initialBoard && this.initialBoard[row][col] !== 0) {
                         this.ctx.fillStyle = '#000';
-                    } else if (this.conflicts[row][col]) {
+                    } else if (this.conflicts && this.conflicts[row][col]) {
                         this.ctx.fillStyle = '#e74c3c';
                     } else {
                         this.ctx.fillStyle = '#3498db';
