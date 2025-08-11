@@ -19,6 +19,11 @@ import {
 export class SudokuGame {
     constructor(canvasId) {
         this.canvas = getElementById(canvasId);
+        if (!this.canvas) {
+            console.error('Canvas não encontrado:', canvasId);
+            return;
+        }
+        
         this.ctx = this.canvas.getContext('2d');
         this.loader = getElementById('loader-container');
         this.hintBtn = getElementById('hint-btn');
@@ -40,6 +45,13 @@ export class SudokuGame {
         this.boardSize = 0;
         this.cellSize = 0;
         
+        // Sistemas avançados (opcionais)
+        this.highlightSystem = null;
+        this.numberCounter = null;
+        this.notesSystem = null;
+        this.historySystem = null;
+        this.hintsSystem = null;
+        
         this.init();
     }
 
@@ -48,6 +60,45 @@ export class SudokuGame {
      */
     init() {
         this.setupCanvas();
+        this.initializeAdvancedSystems();
+        this.startNewGame();
+        this.addEventListeners();
+        
+        // Adiciona listener para redimensionamento com debounce
+        window.addEventListener('resize', debounce(() => this.resizeAndDraw(), 250));
+    }
+
+    /**
+     * Inicializa os sistemas avançados de forma assíncrona
+     */
+    async initializeAdvancedSystems() {
+        try {
+            // Importar e inicializar sistemas avançados
+            const { HighlightSystem } = await import('./highlight-system.js');
+            this.highlightSystem = new HighlightSystem(this);
+            
+            const { NumberCounter } = await import('./number-counter.js');
+            this.numberCounter = new NumberCounter(this);
+            
+            const { NotesSystem } = await import('./notes-system.js');
+            this.notesSystem = new NotesSystem(this);
+            
+            const { HistorySystem } = await import('./history-system.js');
+            this.historySystem = new HistorySystem(this);
+            
+            const { HintsSystem } = await import('./hints-system.js');
+            this.hintsSystem = new HintsSystem(this);
+            
+            console.log('✅ Sistemas avançados inicializados com sucesso');
+            
+            // Criar controles móveis
+            this.createMobileControls();
+            
+        } catch (error) {
+            console.warn('⚠️ Alguns sistemas avançados não puderam ser carregados:', error);
+            console.warn('Continuando com funcionalidade básica...');
+        }
+    }
         this.startNewGame();
         this.addEventListeners();
         

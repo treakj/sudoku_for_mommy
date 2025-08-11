@@ -3,7 +3,7 @@
  * Inicializa o jogo e configura todos os event listeners
  */
 
-import { SudokuGame } from './modules/game.js';
+import { SudokuGame } from './modules/game-fixed.js';
 import { updateUIText, toggleLanguage, getCurrentTranslations } from './modules/translations.js';
 import { 
     getElementById, 

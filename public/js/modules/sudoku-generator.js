@@ -22,15 +22,21 @@ export class SudokuGenerator {
      * @returns {object} Objeto contendo puzzle e solução
      */
     generate(difficulty) {
+        console.log('🔧 Iniciando geração do puzzle...');
         this.grid = this.createEmptyGrid();
+        
+        console.log('🔧 Preenchendo grid...');
         this._fillGrid(this.grid);
         
         // Cria uma cópia da solução completa
         const solution = this.grid.map(row => [...row]);
+        console.log('✅ Grid preenchido com sucesso');
         
+        console.log('🔧 Removendo números para dificuldade:', difficulty);
         // Remove números baseado na dificuldade
         this._removeNumbers(this.grid, difficulty);
         
+        console.log('✅ Puzzle gerado com sucesso');
         return {
             puzzle: this.grid,
             solution: solution
