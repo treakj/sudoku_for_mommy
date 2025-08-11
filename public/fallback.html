@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jogo de Sudoku - Versão Compatível</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&family=Noto+Sans+JP:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body class="bg-gray-100 text-gray-800 flex flex-col items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-2xl mx-auto">
+        <header class="text-center mb-4 relative">
+            <h1 id="main-title" class="text-3xl md:text-4xl font-bold text-gray-900">Jogo de Sudoku</h1>
+            <p id="subtitle" class="text-gray-600 mt-1">Desafie sua lógica e divirta-se!</p>
+            <button id="lang-toggle"
+                class="absolute top-0 right-0 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-4 rounded-lg transition-colors">
+                JP
+            </button>
+        </header>
+
+        <main class="bg-white p-4 sm:p-6 rounded-xl shadow-lg">
+            <!-- Controles de Dificuldade -->
+            <div class="flex flex-wrap gap-2 sm:gap-4 justify-center mb-4 items-center">
+                <div class="flex items-center gap-1 sm:gap-2 flex-wrap justify-center">
+                    <span id="difficulty-label" class="font-semibold">Dificuldade:</span>
+                    <button data-difficulty="easy" class="btn-difficulty border-2 border-gray-300 px-2 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors hover:bg-blue-100">Fácil</button>
+                    <button data-difficulty="medium" class="btn-difficulty border-2 border-gray-300 px-2 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors hover:bg-blue-100 active">Médio</button>
+                    <button data-difficulty="hard" class="btn-difficulty border-2 border-gray-300 px-2 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors hover:bg-blue-100">Difícil</button>
+                    <button data-difficulty="expert" class="btn-difficulty border-2 border-gray-300 px-2 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors hover:bg-blue-100">Dificílimo</button>
+                    <button data-difficulty="insane" class="btn-difficulty border-2 border-gray-300 px-2 py-1 rounded-md text-xs sm:text-sm font-medium transition-colors hover:bg-blue-100">Dificílimo Mesmo</button>
+                </div>
+            </div>
+
+            <!-- Controles de Ação -->
+            <div class="flex flex-wrap gap-2 sm:gap-4 justify-center mb-4">
+                <button id="new-game-btn" class="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition-transform transform hover:scale-105">Novo Jogo</button>
+                <button id="reset-btn" class="bg-gray-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-gray-600 transition-transform transform hover:scale-105">Limpar</button>
+                <button id="hint-btn" class="btn-action bg-green-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-600 transition-transform transform hover:scale-105">Dica (3)</button>
+                <button id="show-answer-btn" class="btn-action bg-yellow-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-yellow-600 transition-transform transform hover:scale-105">Resposta</button>
+            </div>
+
+            <!-- Canvas do Jogo -->
+            <div class="canvas-container mx-auto relative">
+                <canvas id="sudoku-canvas"></canvas>
+                <div id="loader-container" class="absolute inset-0 bg-white bg-opacity-80 flex items-center justify-center hidden">
+                    <div id="loader"></div>
+                </div>
+            </div>
+
+            <!-- Painel de Números para Mobile -->
+            <div id="number-panel" class="grid grid-cols-10 gap-1 mt-4">
+                <button data-num="1" class="num-btn bg-gray-200 p-2 rounded-md text-xl font-bold hover:bg-blue-200 aspect-square flex items-center justify-center">1</button>
+                <button data-num="2" class="num-btn bg-gray-200 p-2 rounded-md text-xl font-bold hover:bg-blue-200 aspect-square flex items-center justify-center">2</button>
+                <button data-num="3" class="num-btn bg-gray-200 p-2 rounded-md text-xl font-bold hover:bg-blue-200 aspect-square flex items-center justify-center">3</button>
+                <button data-num="4" class="num-btn bg-gray-200 p-2 rounded-md text-xl font-bold hover:bg-blue-200 aspect-square flex items-center justify-center">4</button>
+                <button data-num="5" class="num-btn bg-gray-200 p-2 rounded-md text-xl font-bold hover:bg-blue-200 aspect-square flex items-center justify-center">5</button>
+                <button data-num="6" class="num-btn bg-gray-200 p-2 rounded-md text-xl font-bold hover:bg-blue-200 aspect-square flex items-center justify-center">6</button>
+                <button data-num="7" class="num-btn bg-gray-200 p-2 rounded-md text-xl font-bold hover:bg-blue-200 aspect-square flex items-center justify-center">7</button>
+                <button data-num="8" class="num-btn bg-gray-200 p-2 rounded-md text-xl font-bold hover:bg-blue-200 aspect-square flex items-center justify-center">8</button>
+                <button data-num="9" class="num-btn bg-gray-200 p-2 rounded-md text-xl font-bold hover:bg-blue-200 aspect-square flex items-center justify-center">9</button>
+                <button data-num="0" class="num-btn bg-red-200 p-2 rounded-md text-xl font-bold hover:bg-red-300 aspect-square flex items-center justify-center">×</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modais aqui... -->
+    <div id="win-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50">
+        <div class="bg-white p-8 rounded-lg shadow-2xl text-center transform transition-all scale-95">
+            <h2 id="win-title" class="text-3xl font-bold text-yellow-500 mb-2">Parabéns!</h2>
+            <p id="win-subtitle" class="text-lg text-gray-700 mb-6">Você completou o Sudoku!</p>
+            <button id="modal-new-game-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        // Código JavaScript inline como fallback
+        console.log('Iniciando Sudoku...');
+        
+        // Teste básico
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('DOM carregado!');
+            
+            // Carregar módulos dinamicamente
+            Promise.all([
+                import('./js/modules/translations.js'),
+                import('./js/modules/game.js')
+            ]).then(([translations, game]) => {
+                console.log('Módulos carregados com sucesso!');
+                
+                // Inicializar jogo
+                const sudokuGame = new game.SudokuGame('sudoku-canvas');
+                translations.updateUIText();
+                
+                // Configurar event listeners básicos
+                document.getElementById('lang-toggle').addEventListener('click', () => {
+                    translations.toggleLanguage();
+                    sudokuGame.updateHintButton();
+                });
+                
+                console.log('Jogo inicializado!');
+            }).catch(error => {
+                console.error('Erro ao carregar módulos:', error);
+                
+                // Fallback: Mostrar mensagem de erro amigável
+                document.body.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-gray-100">
+                        <div class="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+                            <h1 class="text-2xl font-bold text-red-600 mb-4">⚠️ Erro de Carregamento</h1>
+                            <p class="text-gray-700 mb-4">Houve um problema ao carregar o jogo. Isso pode ser devido a:</p>
+                            <ul class="text-left text-sm text-gray-600 mb-4">
+                                <li>• Conexão de internet instável</li>
+                                <li>• Navegador não suportado</li>
+                                <li>• Bloqueador de scripts ativo</li>
+                            </ul>
+                            <button onclick="location.reload()" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700">
+                                Tentar Novamente
+                            </button>
+                            <p class="text-xs text-gray-500 mt-4">Erro: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        });
+    </script>
+</body>
+
+</html>

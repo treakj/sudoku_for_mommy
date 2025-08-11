@@ -1,0 +1,99 @@
+/* Reset e configurações básicas */
+body {
+    font-family: 'Inter', sans-serif;
+    touch-action: manipulation;
+}
+
+body.lang-ja {
+    font-family: 'Noto Sans JP', sans-serif;
+}
+
+body.lang-pt,
+body.lang-en {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Container do canvas */
+.canvas-container {
+    width: 100%;
+    max-width: 600px;
+    aspect-ratio: 1 / 1;
+}
+
+canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+    border-radius: 0.5rem;
+}
+
+/* Botões de dificuldade */
+.btn-difficulty.active {
+    background-color: #1E40AF;
+    color: white;
+    border-color: #1E40AF;
+}
+
+/* Loader */
+#loader {
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid #3498db;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Botões de ação desabilitados */
+.btn-action:disabled {
+    background-color: #9CA3AF;
+    cursor: not-allowed;
+}
+
+/* Responsividade para mobile */
+@media (max-width: 640px) {
+    .canvas-container {
+        max-width: 350px;
+    }
+    
+    #number-panel {
+        gap: 0.25rem;
+    }
+    
+    .num-btn {
+        padding: 0.5rem;
+        font-size: 1rem;
+    }
+}
+
+/* Melhorias de acessibilidade */
+@media (prefers-reduced-motion: reduce) {
+    #loader {
+        animation: none;
+    }
+    
+    .transition-transform {
+        transition: none;
+    }
+}
+
+/* Estados de foco para acessibilidade */
+button:focus,
+canvas:focus {
+    outline: 2px solid #3B82F6;
+    outline-offset: 2px;
+}
+
+/* Melhorias visuais para os modais */
+.modal-backdrop {
+    backdrop-filter: blur(4px);
+}

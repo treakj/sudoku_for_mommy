@@ -1,0 +1,2 @@
+<!-- Este é um placeholder para o favicon. Você pode substituir por um arquivo .ico real -->
+<!-- Para criar um favicon personalizado, você pode usar ferramentas como https://favicon.io/ -->
