@@ -33,13 +33,134 @@ export class SudokuGenerator {
         console.log('✅ Grid preenchido com sucesso');
         
         console.log('🔧 Removendo números para dificuldade:', difficulty);
-        // Remove números baseado na dificuldade
+        // Remove números baseado na dificuldade (com verificação de unicidade)
         this._removeNumbers(this.grid, difficulty);
         
-        console.log('✅ Puzzle gerado com sucesso');
+        // 🔍 VALIDAÇÃO FINAL
+        console.log('🔍 Validando puzzle final...');
+        const validationResult = this._validatePuzzle(this.grid, solution);
+        
+        if (!validationResult.isValid) {
+            console.error('❌ Puzzle inválido gerado:', validationResult.errors);
+            // Em caso de erro, tenta novamente ou usa backup
+            return this._generateFallback(difficulty);
+        }
+        
+        console.log('✅ Puzzle validado com sucesso!');
+        console.log(`📊 Estatísticas: ${validationResult.stats.filledCells} células preenchidas, ${validationResult.stats.emptyCells} vazias`);
+        
         return {
             puzzle: this.grid,
-            solution: solution
+            solution: solution,
+            stats: validationResult.stats
+        };
+    }
+
+    /**
+     * 🔍 VALIDADOR FINAL DO PUZZLE
+     * Verifica se o puzzle gerado é válido e resolvível
+     * @param {number[][]} puzzle - Puzzle a validar
+     * @param {number[][]} expectedSolution - Solução esperada
+     * @returns {object} Resultado da validação
+     */
+    _validatePuzzle(puzzle, expectedSolution) {
+        const errors = [];
+        const stats = {
+            filledCells: 0,
+            emptyCells: 0,
+            hasUniqueSolution: false,
+            solutionMatches: false
+        };
+        
+        // Conta células
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (puzzle[r][c] === 0) {
+                    stats.emptyCells++;
+                } else {
+                    stats.filledCells++;
+                }
+            }
+        }
+        
+        // Verifica se tem solução única
+        console.log('🔍 Verificando se tem solução única...');
+        stats.hasUniqueSolution = this._hasUniqueSolution(puzzle);
+        
+        if (!stats.hasUniqueSolution) {
+            errors.push('Puzzle não tem solução única');
+        }
+        
+        // Verifica se a solução está correta
+        console.log('🔍 Verificando se solução está correta...');
+        const puzzleCopy = puzzle.map(row => [...row]);
+        if (this._fillGrid(puzzleCopy)) {
+            stats.solutionMatches = this._gridsMatch(puzzleCopy, expectedSolution);
+            if (!stats.solutionMatches) {
+                errors.push('Solução não confere com a esperada');
+            }
+        } else {
+            errors.push('Puzzle não pode ser resolvido');
+        }
+        
+        return {
+            isValid: errors.length === 0,
+            errors: errors,
+            stats: stats
+        };
+    }
+
+    /**
+     * 🆚 COMPARADOR DE GRIDS
+     * Verifica se dois grids são idênticos
+     */
+    _gridsMatch(grid1, grid2) {
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid1[r][c] !== grid2[r][c]) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 🚨 GERADOR DE BACKUP
+     * Gera puzzle simples se o principal falhar
+     */
+    _generateFallback(difficulty) {
+        console.warn('🚨 Usando gerador de backup devido a falha na validação');
+        
+        // Usa puzzle pré-definido válido
+        const fallbackPuzzle = [
+            [5, 3, 0, 0, 7, 0, 0, 0, 0],
+            [6, 0, 0, 1, 9, 5, 0, 0, 0],
+            [0, 9, 8, 0, 0, 0, 0, 6, 0],
+            [8, 0, 0, 0, 6, 0, 0, 0, 3],
+            [4, 0, 0, 8, 0, 3, 0, 0, 1],
+            [7, 0, 0, 0, 2, 0, 0, 0, 6],
+            [0, 6, 0, 0, 0, 0, 2, 8, 0],
+            [0, 0, 0, 4, 1, 9, 0, 0, 5],
+            [0, 0, 0, 0, 8, 0, 0, 7, 9]
+        ];
+        
+        const fallbackSolution = [
+            [5, 3, 4, 6, 7, 8, 9, 1, 2],
+            [6, 7, 2, 1, 9, 5, 3, 4, 8],
+            [1, 9, 8, 3, 4, 2, 5, 6, 7],
+            [8, 5, 9, 7, 6, 1, 4, 2, 3],
+            [4, 2, 6, 8, 5, 3, 7, 9, 1],
+            [7, 1, 3, 9, 2, 4, 8, 5, 6],
+            [9, 6, 1, 5, 3, 7, 2, 8, 4],
+            [2, 8, 7, 4, 1, 9, 6, 3, 5],
+            [3, 4, 5, 2, 8, 6, 1, 7, 9]
+        ];
+        
+        return {
+            puzzle: fallbackPuzzle.map(row => [...row]),
+            solution: fallbackSolution.map(row => [...row]),
+            stats: { filledCells: 40, emptyCells: 41, fallback: true }
         };
     }
 
@@ -76,11 +197,12 @@ export class SudokuGenerator {
 
     /**
      * Remove números do grid baseado na dificuldade
+     * VERSÃO MELHORADA: Garante solução única
      * @param {number[][]} grid - Grid para remover números
      * @param {string} difficulty - Nível de dificuldade
      */
     _removeNumbers(grid, difficulty) {
-        const removals = {
+        const targetRemovals = {
             easy: 40,
             medium: 50,
             hard: 56,
@@ -88,17 +210,107 @@ export class SudokuGenerator {
             insane: 64
         };
         
-        let count = removals[difficulty] || removals.medium;
+        const targetCount = targetRemovals[difficulty] || targetRemovals.medium;
+        let removedCount = 0;
+        let attempts = 0;
+        const maxAttempts = 1000; // Evita loop infinito
         
-        while (count > 0) {
-            const row = Math.floor(Math.random() * 9);
-            const col = Math.floor(Math.random() * 9);
-            
-            if (grid[row][col] !== 0) {
-                grid[row][col] = 0;
-                count--;
+        console.log(`🎯 Meta: remover ${targetCount} números mantendo solução única`);
+        
+        // Lista de todas as células preenchidas
+        const filledCells = [];
+        for (let r = 0; r < 9; r++) {
+            for (let c = 0; c < 9; c++) {
+                if (grid[r][c] !== 0) {
+                    filledCells.push([r, c]);
+                }
             }
         }
+        
+        // Embaralha para remoção aleatória
+        this._shuffle(filledCells);
+        
+        // Remove números mantendo solução única
+        for (const [row, col] of filledCells) {
+            if (removedCount >= targetCount || attempts >= maxAttempts) break;
+            
+            attempts++;
+            const originalValue = grid[row][col];
+            
+            // Remove temporariamente
+            grid[row][col] = 0;
+            
+            // Verifica se ainda tem solução única
+            if (this._hasUniqueSolution(grid)) {
+                // ✅ Pode remover - solução ainda é única
+                removedCount++;
+                console.log(`✅ Removido: posição (${row},${col}) = ${originalValue} [${removedCount}/${targetCount}]`);
+            } else {
+                // ❌ Não pode remover - restaura valor
+                grid[row][col] = originalValue;
+                console.log(`❌ Restaurado: posição (${row},${col}) = ${originalValue} (perderia unicidade)`);
+            }
+        }
+        
+        console.log(`🎯 Resultado: ${removedCount} números removidos de ${targetCount} desejados`);
+        console.log(`🔍 Tentativas: ${attempts} de ${maxAttempts} máximas`);
+    }
+
+    /**
+     * 🔍 VERIFICADOR DE SOLUÇÃO ÚNICA
+     * Verifica se o puzzle tem exatamente uma solução
+     * @param {number[][]} grid - Grid para verificar
+     * @returns {boolean} True se tem solução única
+     */
+    _hasUniqueSolution(grid) {
+        const gridCopy = grid.map(row => [...row]);
+        const solutions = [];
+        
+        // Busca até 2 soluções (se encontrar 2, não é única)
+        this._countSolutions(gridCopy, solutions, 2);
+        
+        return solutions.length === 1;
+    }
+
+    /**
+     * 🔢 CONTADOR DE SOLUÇÕES (Backtracking Otimizado)
+     * Conta quantas soluções o puzzle tem
+     * @param {number[][]} grid - Grid atual
+     * @param {number[][]} solutions - Array para armazenar soluções
+     * @param {number} maxSolutions - Máximo de soluções a buscar
+     * @returns {boolean} True se deve continuar buscando
+     */
+    _countSolutions(grid, solutions, maxSolutions) {
+        if (solutions.length >= maxSolutions) {
+            return false; // Para de buscar se já encontrou o suficiente
+        }
+        
+        const emptyCell = this._findEmpty(grid);
+        
+        if (!emptyCell) {
+            // Grid completo - encontrou uma solução
+            solutions.push(grid.map(row => [...row]));
+            return solutions.length < maxSolutions;
+        }
+        
+        const [row, col] = emptyCell;
+        
+        // Tenta números 1-9 (sem embaralhar para ser determinístico)
+        for (let num = 1; num <= 9; num++) {
+            if (this._isValid(grid, row, col, num)) {
+                grid[row][col] = num;
+                
+                // Recursão
+                if (!this._countSolutions(grid, solutions, maxSolutions)) {
+                    grid[row][col] = 0; // Backtrack
+                    return false; // Para se já encontrou soluções suficientes
+                }
+                
+                grid[row][col] = 0; // Backtrack
+            }
+        }
+        
+        return true;
     }
 
     /**
