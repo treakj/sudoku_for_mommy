@@ -3,7 +3,7 @@
  * Inicializa o jogo e configura todos os event listeners
  */
 
-import { SudokuGame } from './modules/game-fixed.js';
+import { SudokuGame } from './modules/game-enhanced.js';
 import { updateUIText, toggleLanguage, getCurrentTranslations } from './modules/translations.js';
 import { 
     getElementById, 
@@ -87,6 +87,34 @@ function setupActionControls(game) {
     addEventListener(showAnswerBtn, 'click', () => {
         game.showConfirmModal();
     });
+    
+    // Botão Notas
+    const notesBtn = getElementById('notes-btn');
+    if (notesBtn) {
+        addEventListener(notesBtn, 'click', () => {
+            if (game.notesSystem) {
+                game.notesSystem.toggleNotesMode();
+                updateNotesButton(notesBtn, game.notesSystem.isNotesMode);
+            }
+        });
+    }
+}
+
+/**
+ * Atualiza o visual do botão de notas
+ */
+function updateNotesButton(button, isActive) {
+    if (isActive) {
+        addClass(button, 'bg-orange-500');
+        addClass(button, 'text-white');
+        removeClass(button, 'bg-gray-200');
+        removeClass(button, 'text-gray-700');
+    } else {
+        removeClass(button, 'bg-orange-500');
+        removeClass(button, 'text-white');
+        addClass(button, 'bg-gray-200');
+        addClass(button, 'text-gray-700');
+    }
 }
 
 /**
@@ -260,10 +288,8 @@ function main() {
     setupKeyboardShortcuts();
     // setupServiceWorker(); // Descomente se quiser PWA
     
-    // Adiciona um pequeno delay para garantir que o DOM está totalmente renderizado
-    setTimeout(() => {
-        initializeApp();
-    }, 100);
+    // Inicializa imediatamente, já que onDOMReady garante que o DOM está pronto
+    initializeApp();
 }
 
 // Inicializa quando o DOM estiver pronto
