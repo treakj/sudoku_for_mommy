@@ -20,26 +20,16 @@ export class NotesSystem {
     }
 
     createNotesToggle() {
-        // Criar botão de modo notas
-        const notesBtn = document.createElement('button');
-        notesBtn.className = 'notes-toggle-btn';
-        notesBtn.innerHTML = `
-            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708L9.708 9.708a.5.5 0 0 1-.708 0L4.5 5.207l-.146.147a.5.5 0 0 1-.708-.708l.5-.5L2 2h12.146z"/>
-                <path d="M5.5 6.5L1.5 10.5V14h3.5l4-4z"/>
-            </svg>
-            <span>Notas</span>
-        `;
-        notesBtn.title = 'Alternar modo de notas (Shift)';
-        notesBtn.addEventListener('click', () => this.toggleNotesMode());
-
-        // Adicionar ao container de controles
-        const controlsContainer = document.querySelector('.game-controls');
-        if (controlsContainer) {
-            controlsContainer.appendChild(notesBtn);
+        // Usar o botão existente do HTML
+        this.toggleButton = document.getElementById('notes-btn');
+        
+        if (!this.toggleButton) {
+            console.warn('Botão de notas não encontrado no HTML');
+            return;
         }
-
-        this.toggleButton = notesBtn;
+        
+        // Adicionar listener ao botão (será sobrescrito pelo main.js)
+        this.toggleButton.addEventListener('click', () => this.toggleNotesMode());
     }
 
     attachEventListeners() {
@@ -116,8 +106,16 @@ export class NotesSystem {
     setNotesMode(enabled) {
         this.isNotesMode = enabled;
         
-        // Atualizar visual do botão
-        this.toggleButton.classList.toggle('notes-active', enabled);
+        // Atualizar visual do botão usando classes do Tailwind
+        if (this.toggleButton) {
+            if (enabled) {
+                this.toggleButton.classList.add('bg-orange-500', 'text-white');
+                this.toggleButton.classList.remove('bg-gray-200', 'text-gray-700');
+            } else {
+                this.toggleButton.classList.remove('bg-orange-500', 'text-white');
+                this.toggleButton.classList.add('bg-gray-200', 'text-gray-700');
+            }
+        }
         
         // Atualizar cursor/visual do jogo
         document.body.classList.toggle('notes-mode', enabled);
@@ -125,6 +123,11 @@ export class NotesSystem {
         // Feedback visual
         if (enabled) {
             this.showNotesModeFeedback();
+        }
+        
+        // Notificar o jogo para redesenhar o canvas
+        if (this.game && this.game.draw) {
+            this.game.draw();
         }
     }
 

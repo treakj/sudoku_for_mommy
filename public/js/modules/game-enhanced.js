@@ -65,6 +65,8 @@ export class SudokuGame {
      */
     init() {
         this.setupCanvas();
+        // Desenha grid vazio imediatamente após configurar o canvas
+        this.drawEmptyGrid();
         this.initializeAdvancedSystems();
         this.startNewGame();
         this.addEventListeners();
@@ -117,12 +119,50 @@ export class SudokuGame {
     }
 
     /**
+     * Desenha um grid vazio para exibição imediata
+     */
+    drawEmptyGrid() {
+        this.ctx.clearRect(0, 0, this.boardSize, this.boardSize);
+        
+        // Desenha apenas as linhas do grid
+        this.ctx.strokeStyle = '#ddd';
+        this.ctx.lineWidth = 1;
+        
+        for (let i = 0; i <= 9; i++) {
+            const pos = i * this.cellSize;
+            
+            // Linhas mais grossas para separar os quadrantes 3x3
+            if (i % 3 === 0) {
+                this.ctx.lineWidth = 3;
+                this.ctx.strokeStyle = '#333';
+            } else {
+                this.ctx.lineWidth = 1;
+                this.ctx.strokeStyle = '#ddd';
+            }
+            
+            // Linha horizontal
+            this.ctx.beginPath();
+            this.ctx.moveTo(0, pos);
+            this.ctx.lineTo(this.boardSize, pos);
+            this.ctx.stroke();
+            
+            // Linha vertical
+            this.ctx.beginPath();
+            this.ctx.moveTo(pos, 0);
+            this.ctx.lineTo(pos, this.boardSize);
+            this.ctx.stroke();
+        }
+    }
+
+    /**
      * Inicia um novo jogo
      */
     startNewGame() {
+        // Desenha o grid vazio imediatamente para melhor experiência do usuário
+        this.drawEmptyGrid();
         this.showLoader();
         
-        // Usa setTimeout para não bloquear a UI durante a geração
+        // Usa setTimeout mínimo para não bloquear a UI durante a geração
         setTimeout(() => {
             const { puzzle, solution } = this.generator.generate(this.difficulty);
             this.initialBoard = puzzle;
@@ -142,7 +182,7 @@ export class SudokuGame {
             
             // Notificar início de novo jogo
             this.dispatchGameEvent('new-game');
-        }, 50);
+        }, 10);
     }
 
     /**
@@ -397,10 +437,11 @@ export class SudokuGame {
      * Manipula a conclusão do jogo
      */
     handleGameComplete() {
+        // Reduz delay para melhor responsividade
         setTimeout(() => {
             showModal('success-modal');
             this.dispatchGameEvent('complete');
-        }, 100);
+        }, 50);
     }
 
     /**
@@ -514,15 +555,49 @@ export class SudokuGame {
                     
                     // Cor diferente para números originais vs inseridos pelo jogador
                     if (this.initialBoard[row][col] !== 0) {
-                        this.ctx.fillStyle = '#000';
+                        this.ctx.fillStyle = '#000000';  // Preto - números originais
                     } else if (this.conflicts[row][col]) {
-                        this.ctx.fillStyle = '#e74c3c';
+                        this.ctx.fillStyle = '#dc2626';  // Vermelho - conflitos
                     } else {
-                        this.ctx.fillStyle = '#3498db';
+                        this.ctx.fillStyle = '#1E3A8A';  // Azul - números do jogador
                     }
                     
                     this.ctx.fillText(number.toString(), x, y);
+                } else {
+                    // Desenhar notas se a célula estiver vazia
+                    this.drawCellNotes(row, col);
                 }
+            }
+        }
+    }
+
+    /**
+     * Desenha as notas em uma célula
+     */
+    drawCellNotes(row, col) {
+        if (!this.notesSystem || !this.notesSystem.notesData) return;
+        
+        const cellIndex = row * 9 + col;
+        const notes = this.notesSystem.notesData.get(cellIndex);
+        
+        if (!notes || notes.size === 0) return;
+        
+        // Configuração para notas pequenas
+        this.ctx.font = `${this.cellSize * 0.2}px Arial`;
+        this.ctx.fillStyle = '#F97316'; // Laranja para notas
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        
+        // Desenhar notas em grid 3x3
+        for (let i = 1; i <= 9; i++) {
+            if (notes.has(i)) {
+                const noteRow = Math.floor((i - 1) / 3);
+                const noteCol = (i - 1) % 3;
+                
+                const x = col * this.cellSize + (noteCol + 0.5) * (this.cellSize / 3);
+                const y = row * this.cellSize + (noteRow + 0.5) * (this.cellSize / 3);
+                
+                this.ctx.fillText(i.toString(), x, y);
             }
         }
     }
