@@ -142,6 +142,32 @@ export class HistorySystem {
             }
         });
 
+        // Escutar mudanças de notas
+        document.addEventListener('sudoku-notes-changed', (e) => {
+            if (this.isRecording) {
+                const { cellIndex, number, action, timestamp } = e.detail;
+                this.recordMove({
+                    cellIndex,
+                    number,
+                    action,
+                    timestamp
+                });
+            }
+        });
+
+        // Escutar mudanças de notas em lote (limpeza automática ao preencher número)
+        document.addEventListener('sudoku-notes-batch-changed', (e) => {
+            if (this.isRecording) {
+                const { action, changes, timestamp } = e.detail;
+                this.recordMove({
+                    batch: true,
+                    action,
+                    changes,
+                    timestamp
+                });
+            }
+        });
+
         // Fechar painel com ESC
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && this.isPanelVisible) {
@@ -158,12 +184,16 @@ export class HistorySystem {
 
         // Criar entrada do histórico
         const historyEntry = {
-            timestamp: Date.now(),
+            timestamp: moveData.timestamp || Date.now(),
             cellIndex: moveData.cellIndex,
-            row: Math.floor(moveData.cellIndex / 9),
-            col: moveData.cellIndex % 9,
+            row: moveData.cellIndex !== undefined ? Math.floor(moveData.cellIndex / 9) : null,
+            col: moveData.cellIndex !== undefined ? (moveData.cellIndex % 9) : null,
             previousValue: moveData.previousValue || '',
             newValue: moveData.newValue || '',
+            number: moveData.number,
+            action: moveData.action,
+            batch: !!moveData.batch,
+            changes: moveData.changes || null,
             moveType: this.determineMoveType(moveData),
             gameState: this.captureGameState()
         };
@@ -183,6 +213,12 @@ export class HistorySystem {
     }
 
     determineMoveType(moveData) {
+        if (moveData && moveData.batch && moveData.action) {
+            return moveData.action === 'remove' ? 'notes-batch-remove' : 'notes-batch';
+        }
+        if (moveData && (moveData.action === 'add' || moveData.action === 'remove')) {
+            return moveData.action === 'add' ? 'note-add' : 'note-remove';
+        }
         if (!moveData.previousValue && moveData.newValue) {
             return 'place'; // Colocar número
         } else if (moveData.previousValue && !moveData.newValue) {
@@ -209,27 +245,39 @@ export class HistorySystem {
         this.isRecording = false;
 
         // Restaurar estado anterior
-        const cell = this.getCellByIndex(move.cellIndex);
-        if (cell) {
-            cell.textContent = move.previousValue;
-            
-            // Notificar outros sistemas
-            const event = new CustomEvent('sudoku-cell-changed', {
-                detail: {
-                    cellIndex: move.cellIndex,
-                    previousValue: move.newValue,
-                    newValue: move.previousValue,
-                    isUndo: true
-                }
-            });
-            document.dispatchEvent(event);
+        if (move.moveType === 'note-add' || move.moveType === 'note-remove') {
+            const inverseAction = move.moveType === 'note-add' ? 'remove' : 'add';
+            if (this.game.notesSystem) {
+                this.game.notesSystem.applyNoteChange(move.cellIndex, move.number, inverseAction);
+            }
+        } else if (move.moveType === 'notes-batch-remove' && Array.isArray(move.changes)) {
+            // Reverter remoções em lote: adicionar de volta
+            if (this.game.notesSystem) {
+                move.changes.forEach(ch => this.game.notesSystem.applyNoteChange(ch.cellIndex, ch.number, 'add'));
+            }
+        } else {
+            const cell = this.getCellByIndex(move.cellIndex);
+            if (cell) {
+                cell.textContent = move.previousValue;
+                
+                // Notificar outros sistemas
+                const event = new CustomEvent('sudoku-cell-changed', {
+                    detail: {
+                        cellIndex: move.cellIndex,
+                        previousValue: move.newValue,
+                        newValue: move.previousValue,
+                        isUndo: true
+                    }
+                });
+                document.dispatchEvent(event);
+                this.animateUndo(cell);
+            }
         }
 
         this.currentIndex--;
         this.isRecording = true;
         this.updateButtonStates();
         this.updateHistoryPanel();
-        this.animateUndo(cell);
     }
 
     redo() {
@@ -239,27 +287,38 @@ export class HistorySystem {
         const move = this.history[this.currentIndex];
         this.isRecording = false;
 
-        // Aplicar movimento novamente
-        const cell = this.getCellByIndex(move.cellIndex);
-        if (cell) {
-            cell.textContent = move.newValue;
-            
-            // Notificar outros sistemas
-            const event = new CustomEvent('sudoku-cell-changed', {
-                detail: {
-                    cellIndex: move.cellIndex,
-                    previousValue: move.previousValue,
-                    newValue: move.newValue,
-                    isRedo: true
-                }
-            });
-            document.dispatchEvent(event);
+        if (move.moveType === 'note-add' || move.moveType === 'note-remove') {
+            if (this.game.notesSystem) {
+                this.game.notesSystem.applyNoteChange(move.cellIndex, move.number, move.moveType === 'note-add' ? 'add' : 'remove');
+            }
+        } else if (move.moveType === 'notes-batch-remove' && Array.isArray(move.changes)) {
+            // Reaplicar remoções em lote
+            if (this.game.notesSystem) {
+                move.changes.forEach(ch => this.game.notesSystem.applyNoteChange(ch.cellIndex, ch.number, 'remove'));
+            }
+        } else {
+            // Aplicar movimento novamente
+            const cell = this.getCellByIndex(move.cellIndex);
+            if (cell) {
+                cell.textContent = move.newValue;
+                
+                // Notificar outros sistemas
+                const event = new CustomEvent('sudoku-cell-changed', {
+                    detail: {
+                        cellIndex: move.cellIndex,
+                        previousValue: move.previousValue,
+                        newValue: move.newValue,
+                        isRedo: true
+                    }
+                });
+                document.dispatchEvent(event);
+                this.animateRedo(cell);
+            }
         }
 
         this.isRecording = true;
         this.updateButtonStates();
         this.updateHistoryPanel();
-        this.animateRedo(cell);
     }
 
     canUndo() {
@@ -303,7 +362,9 @@ export class HistorySystem {
             item.className = `history-item ${index <= this.currentIndex ? 'history-item-applied' : 'history-item-future'}`;
             
             const time = new Date(move.timestamp).toLocaleTimeString();
-            const position = `${String.fromCharCode(65 + move.col)}${move.row + 1}`;
+            const position = (move.row !== null && move.col !== null)
+                ? `${String.fromCharCode(65 + move.col)}${(move.row || 0) + 1}`
+                : '-';
             
             let description = '';
             switch (move.moveType) {
@@ -314,16 +375,25 @@ export class HistorySystem {
                     description = `Apagou ${move.previousValue} de ${position}`;
                     break;
                 case 'change':
-                    description = `Mudou ${move.previousValue} para ${move.newValue} em ${position}`;
+                    description = `Trocou ${move.previousValue}→${move.newValue} em ${position}`;
+                    break;
+                case 'note-add':
+                    description = `Nota +${move.number} em ${position}`;
+                    break;
+                case 'note-remove':
+                    description = `Nota -${move.number} em ${position}`;
+                    break;
+                case 'notes-batch-remove':
+                    description = `Notas removidas (${move.changes?.length || 0} células)`;
                     break;
                 default:
-                    description = `Jogada em ${position}`;
+                    description = `Ação em ${position}`;
             }
-
+            
             item.innerHTML = `
-                <div class="history-item-content">
-                    <div class="history-item-description">${description}</div>
+                <div class="history-item-main">
                     <div class="history-item-time">${time}</div>
+                    <div class="history-item-desc">${description}</div>
                 </div>
                 <div class="history-item-actions">
                     <button class="history-goto-btn" data-index="${index}" title="Ir para esta jogada">
