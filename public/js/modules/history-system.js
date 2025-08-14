@@ -23,58 +23,18 @@ export class HistorySystem {
     }
 
     createHistoryControls() {
-        // Botões de desfazer/refazer
-        const undoBtn = document.createElement('button');
-        undoBtn.className = 'history-btn undo-btn';
-        undoBtn.innerHTML = `
-            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/>
-                <path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.308a.25.25 0 0 0 0 .384l2.36 1.966A.25.25 0 0 0 8 4.466z"/>
-            </svg>
-            <span>Desfazer</span>
-        `;
-        undoBtn.title = 'Desfazer última jogada (Ctrl+Z)';
-        undoBtn.addEventListener('click', () => this.undo());
-
-        const redoBtn = document.createElement('button');
-        redoBtn.className = 'history-btn redo-btn';
-        redoBtn.innerHTML = `
-            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/>
-                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966a.25.25 0 0 1 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/>
-            </svg>
-            <span>Refazer</span>
-        `;
-        redoBtn.title = 'Refazer jogada (Ctrl+Y)';
-        redoBtn.addEventListener('click', () => this.redo());
-
-        // Botão para abrir painel
-        const historyBtn = document.createElement('button');
-        historyBtn.className = 'history-btn history-panel-btn';
-        historyBtn.innerHTML = `
-            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
-                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
-            </svg>
-            <span>Histórico</span>
-        `;
-        historyBtn.title = 'Ver histórico completo';
-        historyBtn.addEventListener('click', () => this.toggleHistoryPanel());
-
-        // Adicionar aos controles
-        const controlsContainer = document.querySelector('.game-controls');
-        if (controlsContainer) {
-            const historyGroup = document.createElement('div');
-            historyGroup.className = 'history-controls-group';
-            historyGroup.appendChild(undoBtn);
-            historyGroup.appendChild(redoBtn);
-            historyGroup.appendChild(historyBtn);
-            controlsContainer.appendChild(historyGroup);
+        // Usar os botões existentes no HTML
+        this.undoBtn = document.getElementById('undo-btn');
+        this.redoBtn = document.getElementById('redo-btn');
+        
+        // Adicionar event listeners aos botões existentes
+        if (this.undoBtn) {
+            this.undoBtn.addEventListener('click', () => this.undo());
         }
-
-        this.undoBtn = undoBtn;
-        this.redoBtn = redoBtn;
-        this.historyBtn = historyBtn;
+        if (this.redoBtn) {
+            this.redoBtn.addEventListener('click', () => this.redo());
+        }
+        
         this.updateButtonStates();
     }
 

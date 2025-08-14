@@ -11,21 +11,56 @@ Um jogo de Sudoku moderno e responsivo com suporte a múltiplos idiomas (Portugu
 - **Validação em Tempo Real**: Destaque de conflitos
 - **Navegação por Teclado**: Suporte completo para teclado
 - **Design Moderno**: Interface limpa usando Tailwind CSS
+- **Sistema de Cores Avançado**: 6 cores + indicador visual da cor ativa
+- **Sistema de Notas**: Anotações integradas com cores personalizadas
+- **Undo/Redo**: Desfaça e refaça qualquer ação
+- **Interface Organizada**: Controles intuitivos em 2 linhas
 
 ## 🚀 Como Usar
 
 ### Controles de Teclado
 - **Setas**: Navegar pelo tabuleiro
 - **1-9**: Inserir números
-- **Backspace/Delete/0**: Apagar números
+- **Shift + 1-9**: Modo notas (anotar possibilidades)
+- **Backspace/Delete**: Apagar números
+- **Q**: Alternar modo notas
+- **C**: Alternar entre cores (vermelho → azul → verde → amarelo → roxo → laranja → limpar)
+- **Espaço**: Aplicar cor selecionada na célula atual
 - **H**: Usar dica
-- **L**: Alternar idioma
-- **Ctrl+N**: Novo jogo
-- **Ctrl+R**: Reset do tabuleiro
+- **Ctrl+Z**: Desfazer última ação
+- **Ctrl+Y**: Refazer última ação
 
 ### Controles Touch/Mouse
 - **Click/Tap**: Selecionar célula
+- **Shift + Click**: Aplicar cor na célula sem selecioná-la
 - **Painel de Números**: Para dispositivos móveis
+
+### Layout de Botões
+**Linha Superior (5 botões):**
+- **Novo Jogo**: Começa um novo puzzle
+- **Limpar**: Limpa o tabuleiro atual
+- **Desfazer**: Desfaz última ação
+- **Refazer**: Refaz última ação desfeita
+- **Notas**: Alterna modo de notas
+
+**Linha Inferior (4 botões):**
+- **Dica**: Revela uma célula correta
+- **Resposta**: Mostra solução completa
+- **Limpar Cores**: Remove todas as marcações de cor
+- **Configurações**: Ajustes adicionais
+
+### 🎨 Sistema de Cores Avançado
+
+**Funcionalidades:**
+- **Indicador Visual**: Canto superior esquerdo mostra a cor atualmente selecionada
+- **6 Cores Disponíveis**: Vermelho, Azul, Verde, Amarelo, Roxo, Laranja + opção Limpar
+- **Sempre Ativo**: Sistema sempre ligado, cor pré-selecionada (inicia com vermelho)
+- **Ciclo de Cores**: Tecla `C` alterna entre todas as cores
+- **Aplicação Rápida**: Tecla `Espaço` aplica cor na célula selecionada
+- **Aplicação Precisa**: `Shift + Click` aplica cor sem mudar seleção
+- **Integração com Notas**: Anotações ficam mais escuras em células coloridas
+- **Persistência**: Cores salvas automaticamente no navegador
+- **Feedback Visual**: Animações e notificações confirmam ações
 
 ## 🛠️ Estrutura do Projeto
 
@@ -37,17 +72,24 @@ public/
 ├── js/
 │   ├── main.js            # Arquivo principal da aplicação
 │   ├── modules/
-│   │   ├── game.js        # Lógica principal do jogo
-│   │   ├── sudoku-generator.js  # Gerador de puzzles
-│   │   ├── validator.js   # Validação de movimentos
-│   │   └── translations.js # Sistema de traduções
+│   │   ├── game-enhanced.js       # Lógica principal do jogo
+│   │   ├── sudoku-generator.js    # Gerador de puzzles
+│   │   ├── validator.js           # Validação de movimentos
+│   │   ├── color-system.js        # Sistema de cores para células
+│   │   ├── notes-system.js        # Sistema de anotações
+│   │   ├── history-system.js      # Sistema de histórico (undo/redo)
+│   │   ├── hints-system.js        # Sistema de dicas inteligentes
+│   │   └── translations.js        # Sistema de traduções
 │   └── utils/
-│       └── dom-helpers.js # Utilitários para DOM
+│       └── dom-helpers.js         # Utilitários para DOM
 └── assets/
     └── favicon.ico        # Favicon do site
 ```
 
 ## 🔥 Deploy no Firebase
+
+### ✅ Aplicação em Produção
+**URL:** https://sudoku-for-mom.web.app
 
 ### Pré-requisitos
 1. Instalar [Node.js](https://nodejs.org/)
@@ -84,6 +126,7 @@ O arquivo `firebase.json` já está configurado com:
 - Reescrita de rotas para SPA
 - Cache otimizado para assets estáticos
 - Headers de performance
+- **Deploy Automático**: Use `deploy.ps1` (Windows) ou `deploy.bat`
 
 ## 🧠 Sistema de Geração de Puzzles
 
@@ -265,7 +308,8 @@ public/js/modules/
 ├── sudoku-generator.js      # 🧠 Gerador clássico com verificação
 ├── sudoku-generator-fast.js # ⚡ Gerador rápido com transformações
 ├── notes-system.js          # 📝 Sistema completo de notas
-├── highlight-system.js      # 🎨 Sistema de destaque visual
+├── color-system.js          # 🎨 Sistema de cores para células
+├── highlight-system.js      # 🌈 Sistema de destaque visual
 ├── number-counter.js        # 🔢 Contador de números restantes
 ├── history-system.js        # ⏮️ Histórico de movimentos (undo/redo)
 ├── hints-system.js          # 💡 Sistema de dicas inteligentes

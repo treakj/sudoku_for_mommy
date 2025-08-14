@@ -58,25 +58,15 @@ export class HintsSystem {
     }
 
     createHintsButton() {
-        const hintsBtn = document.createElement('button');
-        hintsBtn.className = 'hints-btn';
-        hintsBtn.innerHTML = `
-            <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/>
-            </svg>
-            <span>Dica</span>
-            <span class="hints-counter">${this.hintsUsed}/${this.maxHints}</span>
-        `;
-        hintsBtn.title = 'Obter dica inteligente';
-        hintsBtn.addEventListener('click', () => this.getHint());
-
-        const controlsContainer = document.querySelector('.game-controls');
-        if (controlsContainer) {
-            controlsContainer.appendChild(hintsBtn);
+        // Usar o botão de dicas existente no HTML em vez de criar um novo
+        this.hintsButton = document.getElementById('hint-btn');
+        if (this.hintsButton) {
+            // Remover event listeners existentes e adicionar o nosso
+            this.hintsButton.replaceWith(this.hintsButton.cloneNode(true));
+            this.hintsButton = document.getElementById('hint-btn');
+            this.hintsButton.addEventListener('click', () => this.getHint());
+            this.updateHintsButton();
         }
-
-        this.hintsButton = hintsBtn;
-        this.updateHintsButton();
     }
 
     createHintsPanel() {
@@ -144,20 +134,25 @@ export class HintsSystem {
     }
 
     getHint() {
+        // Usar o sistema de dicas do jogo principal
+        if (this.game && this.game.giveHint) {
+            this.game.giveHint();
+            return;
+        }
+        
         if (this.hintsUsed >= this.maxHints) {
             this.showHintLimitMessage();
             return;
         }
 
         const hint = this.findBestHint();
-        
         if (!hint) {
             this.showNoHintMessage();
             return;
         }
 
-        this.currentHint = hint;
         this.hintsUsed++;
+        this.currentHint = hint;
         this.updateHintsButton();
         this.displayHint(hint);
         this.toggleHintsPanel(true);
@@ -415,6 +410,15 @@ export class HintsSystem {
 
         const cell = document.querySelectorAll('.cell')[this.currentHint.cellIndex];
         if (cell) {
+            // CORREÇÃO: Garantir que dicas sempre coloquem números definitivos
+            // Salvar estado atual do modo notas
+            const wasNotesMode = this.game.notesSystem?.isNotesMode || false;
+            
+            // Temporariamente desativar modo notas para aplicar a dica
+            if (wasNotesMode && this.game.notesSystem) {
+                this.game.notesSystem.setNotesMode(false);
+            }
+            
             cell.textContent = this.currentHint.number;
             
             // Notificar outros sistemas
@@ -430,6 +434,13 @@ export class HintsSystem {
 
             this.animateHintApplication(cell);
             this.toggleHintsPanel(false);
+            
+            // Restaurar modo notas após um pequeno delay se estava ativo
+            if (wasNotesMode && this.game.notesSystem) {
+                setTimeout(() => {
+                    this.game.notesSystem.setNotesMode(true);
+                }, 100);
+            }
         }
     }
 
@@ -478,10 +489,11 @@ export class HintsSystem {
     }
 
     updateHintsButton() {
-        const counter = this.hintsButton.querySelector('.hints-counter');
-        counter.textContent = `${this.hintsUsed}/${this.maxHints}`;
-        
-        this.hintsButton.disabled = this.hintsUsed >= this.maxHints;
+        // O botão principal já gerencia seu próprio contador
+        // Apenas desabilitar se necessário
+        if (this.hintsButton) {
+            this.hintsButton.disabled = this.hintsUsed >= this.maxHints;
+        }
     }
 
     updateHintsStats() {

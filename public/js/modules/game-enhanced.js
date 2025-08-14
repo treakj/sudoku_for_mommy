@@ -11,6 +11,7 @@ import { NumberCounter } from './number-counter.js';
 import { NotesSystem } from './notes-system.js';
 import { HistorySystem } from './history-system.js';
 import { HintsSystem } from './hints-system.js';
+import { ColorSystem } from './color-system.js';
 import { 
     getElementById, 
     addClass, 
@@ -94,6 +95,9 @@ export class SudokuGame {
             
             // Sistema de dicas
             this.hintsSystem = new HintsSystem(this);
+            
+            // Sistema de cores
+            this.colorSystem = new ColorSystem(this);
             
             console.log('✅ Sistemas avançados inicializados com sucesso');
             
@@ -209,6 +213,10 @@ export class SudokuGame {
             if (this.hintsSystem) {
                 this.hintsSystem.reset();
             }
+            
+            if (this.colorSystem) {
+                this.colorSystem.reset();
+            }
         } catch (error) {
             console.warn('Erro ao resetar sistemas avançados:', error);
         }
@@ -264,6 +272,18 @@ export class SudokuGame {
         const row = Math.floor(y / this.cellSize);
         
         if (row >= 0 && row < 9 && col >= 0 && col < 9) {
+            const cellIndex = row * 9 + col;
+            
+            // Verificar se deve aplicar cor com Shift+click
+            if (e.shiftKey && this.colorSystem && this.colorSystem.selectedColor) {
+                if (this.colorSystem.selectedColor === 'clear') {
+                    this.colorSystem.clearCellColor(cellIndex);
+                } else {
+                    this.colorSystem.paintCell(cellIndex, this.colorSystem.selectedColor);
+                }
+                return; // Não selecionar a célula
+            }
+            
             this.selectCell(row, col);
         }
     }
@@ -282,6 +302,20 @@ export class SudokuGame {
         if (this.highlightSystem && cellValue !== 0) {
             this.highlightSystem.selectNumber(cellValue);
         }
+        
+        // Notificar sistema de notas sobre a seleção
+        if (this.notesSystem) {
+            // Simular um elemento de célula para o sistema de notas
+            const mockCell = {
+                textContent: cellValue === 0 ? '' : cellValue.toString(),
+                classList: {
+                    add: () => {},
+                    remove: () => {},
+                    contains: () => false
+                }
+            };
+            this.notesSystem.setActiveCell(cellValue === 0 ? mockCell : null);
+        }
     }
 
     /**
@@ -292,8 +326,13 @@ export class SudokuGame {
         
         const key = e.key;
         
-        // Números 1-9
+        // Números 1-9 - verificar se modo notas está ativo
         if (/^[1-9]$/.test(key)) {
+            // Se modo notas está ativo, deixar o NotesSystem lidar com isso
+            if (this.notesSystem && this.notesSystem.isNotesMode) {
+                return; // NotesSystem já interceptou via seu próprio listener
+            }
+            
             const num = parseInt(key);
             this.setNumber(this.selected.row, this.selected.col, num);
         }
@@ -307,6 +346,19 @@ export class SudokuGame {
         // Delete/Backspace para apagar
         else if (['Delete', 'Backspace'].includes(key)) {
             this.setNumber(this.selected.row, this.selected.col, 0);
+        }
+        
+        // Tecla Espaço para aplicar cor selecionada
+        else if (e.code === 'Space' && this.colorSystem && this.colorSystem.selectedColor) {
+            e.preventDefault();
+            const cellIndex = this.selected.row * 9 + this.selected.col;
+            if (this.colorSystem.selectedColor === 'clear') {
+                this.colorSystem.clearCellColor(cellIndex);
+                this.colorSystem.showColorFeedback('Célula limpa! 🗑️');
+            } else {
+                this.colorSystem.paintCell(cellIndex, this.colorSystem.selectedColor);
+                this.colorSystem.showColorFeedback(`Cor ${this.colorSystem.selectedColor} aplicada! ✨`);
+            }
         }
     }
 
@@ -395,12 +447,13 @@ export class SudokuGame {
      * Atualiza os conflitos no tabuleiro
      */
     updateConflicts() {
+        // Atualiza conflitos no tabuleiro
         this.conflicts = this.createEmptyGrid(false);
         
         for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
                 if (this.playerBoard[row][col] !== 0) {
-                    if (!this.validator.isValidPlacement(this.playerBoard, row, col, this.playerBoard[row][col])) {
+                    if (!this.validator.isMoveValid(this.playerBoard, row, col, this.playerBoard[row][col])) {
                         this.conflicts[row][col] = true;
                     }
                 }
@@ -489,7 +542,8 @@ export class SudokuGame {
      */
     updateHintButton() {
         if (this.hintBtn) {
-            this.hintBtn.textContent = `Dica (${this.hintsLeft})`;
+            const translations = getCurrentTranslations();
+            this.hintBtn.textContent = `${translations.hint} (${this.hintsLeft})`;
             this.hintBtn.disabled = this.hintsLeft <= 0;
         }
     }
@@ -499,9 +553,30 @@ export class SudokuGame {
      */
     draw() {
         this.ctx.clearRect(0, 0, this.boardSize, this.boardSize);
+        this.drawCellColors();
         this.drawGrid();
         this.drawNumbers();
         this.drawSelection();
+    }
+
+    /**
+     * Desenha as cores de fundo das células
+     */
+    drawCellColors() {
+        if (!this.colorSystem || !this.colorSystem.cellColors) return;
+        
+        this.colorSystem.cellColors.forEach((colorName, cellIndex) => {
+            const color = this.colorSystem.availableColors.find(c => c.name === colorName);
+            if (!color) return;
+            
+            const row = Math.floor(cellIndex / 9);
+            const col = cellIndex % 9;
+            const x = col * this.cellSize;
+            const y = row * this.cellSize;
+            
+            this.ctx.fillStyle = color.value;
+            this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
+        });
     }
 
     /**
@@ -584,9 +659,21 @@ export class SudokuGame {
         
         // Configuração para notas pequenas
         this.ctx.font = `${this.cellSize * 0.2}px Arial`;
-        this.ctx.fillStyle = '#F97316'; // Laranja para notas
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
+        
+        // Verificar se a célula tem cor personalizada para as notas
+        let noteColor = '#F97316'; // Laranja padrão para notas
+        if (this.colorSystem && this.colorSystem.cellColors.has(cellIndex)) {
+            const colorName = this.colorSystem.cellColors.get(cellIndex);
+            const colorData = this.colorSystem.availableColors.find(c => c.name === colorName);
+            if (colorData && colorData.value) {
+                // Usar uma versão mais escura da cor de fundo para as notas
+                noteColor = this.darkenColor(colorData.value, 0.6);
+            }
+        }
+        
+        this.ctx.fillStyle = noteColor;
         
         // Desenhar notas em grid 3x3
         for (let i = 1; i <= 9; i++) {
@@ -603,16 +690,57 @@ export class SudokuGame {
     }
 
     /**
-     * Desenha a seleção atual
+     * Escurece uma cor hexadecimal
+     */
+    darkenColor(hex, factor) {
+        // Remove o #
+        hex = hex.replace('#', '');
+        
+        // Converte para RGB
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        
+        // Escurece multiplicando por fator
+        const newR = Math.round(r * factor);
+        const newG = Math.round(g * factor);
+        const newB = Math.round(b * factor);
+        
+        // Converte de volta para hex
+        return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
+    }
+
+    /**
+     * Desenha a seleção atual com linhas de auxílio
      */
     drawSelection() {
         if (this.selected.row >= 0 && this.selected.col >= 0) {
             const x = this.selected.col * this.cellSize;
             const y = this.selected.row * this.cellSize;
             
+            // Desenhar linhas de auxílio (linha e coluna completas)
+            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
+            // Linha horizontal
+            this.ctx.fillRect(0, y, this.canvas.width, this.cellSize);
+            // Linha vertical
+            this.ctx.fillRect(x, 0, this.cellSize, this.canvas.height);
+            
+            // Destacar o quadrante 3x3
+            const boxRow = Math.floor(this.selected.row / 3) * 3;
+            const boxCol = Math.floor(this.selected.col / 3) * 3;
+            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.05)';
+            this.ctx.fillRect(
+                boxCol * this.cellSize, 
+                boxRow * this.cellSize, 
+                3 * this.cellSize, 
+                3 * this.cellSize
+            );
+            
+            // Destacar a célula selecionada
             this.ctx.fillStyle = 'rgba(52, 152, 219, 0.3)';
             this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
             
+            // Borda da célula selecionada
             this.ctx.strokeStyle = '#3498db';
             this.ctx.lineWidth = 2;
             this.ctx.strokeRect(x, y, this.cellSize, this.cellSize);

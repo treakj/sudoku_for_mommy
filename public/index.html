@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo de Sudoku</title>
+    <title>Jogo de Sudoku v0.7</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -281,6 +281,48 @@
         .lang-btn {
             min-width: 32px;
         }
+
+        /* Estilos para o sistema de cores */
+        #color-indicator {
+            animation: fadeIn 0.3s ease-in;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .color-palette {
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .color-btn {
+            transition: all 0.2s ease;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .color-btn.ring-2 {
+            animation: pulse 0.5s ease-in-out;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; transform: translateY(0); }
+            to { opacity: 0; transform: translateY(-10px); }
+        }
     </style>
 </head>
 
@@ -288,42 +330,44 @@
 
     <div class="w-full max-w-2xl mx-auto">
         <header class="text-center mb-4 relative">
-            <h1 id="main-title" class="text-3xl md:text-4xl font-bold text-gray-900">Jogo de Sudoku</h1>
+            <h1 id="main-title" class="text-3xl md:text-4xl font-bold text-gray-900">Jogo de Sudoku <span class="text-lg text-blue-600">v0.7</span></h1>
             <p id="subtitle" class="text-gray-600 mt-1">Desafie sua lógica e divirta-se!</p>
             
             <!-- Indicações de Controle -->
             <div class="controls-info-panel mt-4">
                 <details class="controls-info">
-                    <summary class="controls-summary">ℹ️ Como Jogar</summary>
-                    <div class="controls-content">
+                    <summary class="controls-summary">ℹ️ <span id="how-to-play-title">Como Jogar</span></summary>
+                    <div class="controls-content" id="how-to-play-content">
                         <div class="control-section">
-                            <h4>⌨️ Teclado</h4>
-                            <ul>
-                                <li><kbd>1-9</kbd> Inserir números</li>
-                                <li><kbd>Shift</kbd> + <kbd>1-9</kbd> Modo notas</li>
-                                <li><kbd>Ctrl+Z</kbd> Desfazer</li>
-                                <li><kbd>Ctrl+Y</kbd> Refazer</li>
-                                <li><kbd>H</kbd> Dica</li>
-                                <li><kbd>Delete</kbd> Apagar</li>
-                                <li><kbd>↑↓←→</kbd> Navegar</li>
+                            <h4>⌨️ <span data-translate="keyboard">Teclado</span></h4>
+                            <ul id="keyboard-controls">
+                                <li><kbd>1-9</kbd> <span data-translate="insert-numbers">Inserir números</span></li>
+                                <li><kbd>Shift</kbd> + <kbd>1-9</kbd> <span data-translate="notes-mode">Modo notas</span></li>
+                                <li><kbd>Q</kbd> <span data-translate="toggle-notes">Alternar modo notas</span></li>
+                                <li><kbd>C</kbd> <span data-translate="cycle-colors">Alternar entre cores</span></li>
+                                <li><kbd>Space</kbd> <span data-translate="apply-color">Aplicar cor selecionada</span></li>
+                                <li><kbd>Ctrl+Z</kbd> <span data-translate="undo">Desfazer</span></li>
+                                <li><kbd>Ctrl+Y</kbd> <span data-translate="redo">Refazer</span></li>
+                                <li><kbd>H</kbd> <span data-translate="hint">Dica</span></li>
+                                <li><kbd>Delete</kbd> <span data-translate="delete">Apagar</span></li>
+                                <li><kbd>↑↓←→</kbd> <span data-translate="navigate">Navegar</span></li>
                             </ul>
                         </div>
                         <div class="control-section">
-                            <h4>🖱️ Mouse/Touch</h4>
-                            <ul>
-                                <li>Clique para selecionar célula</li>
-                                <li>Clique em número para destacar</li>
-                                <li>Mobile: Use painel inferior</li>
+                            <h4>🖱️ <span data-translate="mouse-touch">Mouse/Touch</span></h4>
+                            <ul id="mouse-controls">
+                                <li><span data-translate="click-select">Clique para selecionar célula</span></li>
+                                <li><span data-translate="click-highlight">Clique em número para destacar</span></li>
+                                <li><span data-translate="mobile-panel">Mobile: Use painel inferior</span></li>
                             </ul>
                         </div>
                         <div class="control-section">
-                            <h4>🎯 Recursos</h4>
-                            <ul>
-                                <li>🔢 Contador de números (canto)</li>
-                                <li>📝 Sistema de notas</li>
-                                <li>📚 Histórico completo</li>
-                                <li>💡 Dicas inteligentes</li>
-                                <li>🎨 Destaque automático</li>
+                            <h4>🎯 <span data-translate="features">Recursos</span></h4>
+                            <ul id="features-list">
+                                <li>🔢 <span data-translate="number-counter">Contador de números (canto)</span></li>
+                                <li>📝 <span data-translate="notes-system">Sistema de notas</span></li>
+                                <li>🎨 <span data-translate="color-system">Sistema de cores</span></li>
+                                <li>🎯 <span data-translate="auto-highlight">Destaque automático</span></li>
                             </ul>
                         </div>
                     </div>
@@ -365,23 +409,35 @@
                 </div>
             </div>
 
-            <!-- Controles de Ação -->
-            <div class="flex flex-wrap gap-2 sm:gap-4 justify-center mb-4 game-controls">
+            <!-- Controles de Ação - Primeira Linha -->
+            <div class="flex flex-wrap gap-2 sm:gap-4 justify-center mb-2 game-controls">
                 <button id="new-game-btn"
                     class="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700 transition-transform transform hover:scale-105"
                     data-lang-key="newGame">Novo Jogo</button>
                 <button id="reset-btn"
                     class="bg-gray-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-gray-600 transition-transform transform hover:scale-105"
                     data-lang-key="reset">Limpar</button>
+                <button id="undo-btn"
+                    class="bg-indigo-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-indigo-600 transition-transform transform hover:scale-105">↶ Desfazer</button>
+                <button id="redo-btn"
+                    class="bg-indigo-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-indigo-600 transition-transform transform hover:scale-105">↷ Refazer</button>
                 <button id="notes-btn"
                     class="btn-action bg-purple-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-purple-600 transition-transform transform hover:scale-105"
                     data-lang-key="notes">📝 Notas</button>
+            </div>
+
+            <!-- Controles de Ação - Segunda Linha -->
+            <div class="flex flex-wrap gap-2 sm:gap-4 justify-center mb-4 game-controls">
                 <button id="hint-btn"
                     class="btn-action bg-green-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-600 transition-transform transform hover:scale-105"
                     data-lang-key="hint">Dica (3)</button>
                 <button id="show-answer-btn"
                     class="btn-action bg-yellow-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-yellow-600 transition-transform transform hover:scale-105"
                     data-lang-key="showAnswer">Resposta</button>
+                <button id="clear-colors-btn"
+                    class="bg-red-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-red-600 transition-transform transform hover:scale-105">🗑️ Limpar Cores</button>
+                <button id="settings-btn"
+                    class="bg-teal-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-teal-600 transition-transform transform hover:scale-105">⚙️ Config</button>
             </div>
 
             <!-- Canvas do Jogo -->
@@ -454,6 +510,9 @@
     </div>
 
     <script type="module">
+        // --- IMPORTS ---
+        import { SudokuGame } from './js/modules/game-enhanced.js';
+        
         // --- MÓDULO DE TRADUÇÃO ---
         const translations = {
             en: {
@@ -467,6 +526,10 @@
                 insane: "Insane",
                 newGame: "New Game",
                 reset: "Reset",
+                undo: "Undo",
+                redo: "Redo",
+                clearColors: "Clear Colors",
+                settings: "Settings",
                 hint: "Hint",
                 notes: "Notes",
                 notesActive: "Notes Mode",
@@ -481,16 +544,20 @@
                 langToggle: "JP"
             },
             pt: {
-                mainTitle: "Jogo de Sudoku",
+                mainTitle: "Jogo Sudoku",
                 subtitle: "Desafie sua lógica e divirta-se!",
                 difficultyLabel: "Dificuldade:",
                 easy: "Fácil",
                 medium: "Médio",
                 hard: "Difícil",
-                expert: "Dificílimo",
-                insane: "Dificílimo Mesmo",
+                expert: "Expert",
+                insane: "Insano",
                 newGame: "Novo Jogo",
-                reset: "Limpar",
+                reset: "Reiniciar",
+                undo: "Desfazer",
+                redo: "Refazer",
+                clearColors: "Limpar Cores",
+                settings: "Configurações",
                 hint: "Dica",
                 notes: "Notas",
                 notesActive: "Modo Notas",
@@ -499,10 +566,10 @@
                 winSubtitle: "Você completou o Sudoku!",
                 playAgain: "Jogar Novamente",
                 confirmTitle: "Mostrar Resposta?",
-                confirmSubtitle: "Isso preencherá todo o tabuleiro e encerrará o jogo atual. Você tem certeza?",
+                confirmSubtitle: "Isso preencherá todo o tabuleiro e encerrará o jogo atual. Tem certeza?",
                 cancel: "Cancelar",
                 confirm: "Confirmar",
-                langToggle: "EN"
+                langToggle: "JP"
             },
             ja: {
                 mainTitle: "数独ゲーム　（母ちゃん用）",
@@ -515,6 +582,10 @@
                 insane: "超難関　【真弓用）",
                 newGame: "新しいゲーム",
                 reset: "リセット",
+                undo: "元に戻す",
+                redo: "やり直す",
+                clearColors: "色をクリア",
+                settings: "設定",
                 hint: "ヒント",
                 notes: "メモ",
                 notesActive: "メモモード",
@@ -547,6 +618,12 @@
             document.querySelector('[data-difficulty="insane"]').textContent = t.insane;
             document.getElementById('new-game-btn').textContent = t.newGame;
             document.getElementById('reset-btn').textContent = t.reset;
+            document.getElementById('undo-btn').textContent = t.undo;
+            document.getElementById('redo-btn').textContent = t.redo;
+            document.getElementById('clear-colors-btn').textContent = t.clearColors;
+            document.getElementById('settings-btn').textContent = t.settings;
+            document.getElementById('hint-btn').textContent = t.hint;
+            document.getElementById('notes-btn').textContent = t.notes;
             document.getElementById('show-answer-btn').textContent = t.showAnswer;
             document.getElementById('win-title').textContent = t.winTitle;
             document.getElementById('win-subtitle').textContent = t.winSubtitle;
@@ -575,416 +652,8 @@
             updateUIText();
         }
 
-        // --- MÓDULO: GERADOR DE PUZZLE ---
-        class SudokuGenerator {
-            constructor() { this.grid = this.createEmptyGrid(); }
-            createEmptyGrid() { return Array(9).fill(0).map(() => Array(9).fill(0)); }
-            generate(difficulty) {
-                this.grid = this.createEmptyGrid();
-                this._fillGrid(this.grid);
-                const solution = this.grid.map(row => [...row]);
-                this._removeNumbers(this.grid, difficulty);
-                return { puzzle: this.grid, solution: solution };
-            }
-            _fillGrid(grid) {
-                let numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9];
-                let find = this._findEmpty(grid);
-                if (!find) return true;
-                let [row, col] = find;
-                this._shuffle(numbers);
-                for (let num of numbers) {
-                    if (this._isValid(grid, row, col, num)) {
-                        grid[row][col] = num;
-                        if (this._fillGrid(grid)) return true;
-                        grid[row][col] = 0;
-                    }
-                }
-                return false;
-            }
-            _removeNumbers(grid, difficulty) {
-                const removals = { easy: 40, medium: 50, hard: 56, expert: 61, insane: 64 }[difficulty];
-                let count = removals;
-                while (count > 0) {
-                    let row = Math.floor(Math.random() * 9);
-                    let col = Math.floor(Math.random() * 9);
-                    if (grid[row][col] !== 0) {
-                        grid[row][col] = 0;
-                        count--;
-                    }
-                }
-            }
-            _isValid(grid, row, col, num) {
-                for (let i = 0; i < 9; i++) {
-                    if (grid[row][i] === num) return false;
-                    if (grid[i][col] === num) return false;
-                }
-                const startRow = Math.floor(row / 3) * 3;
-                const startCol = Math.floor(col / 3) * 3;
-                for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) if (grid[startRow + i][startCol + j] === num) return false;
-                return true;
-            }
-            _findEmpty(grid) {
-                for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (grid[r][c] === 0) return [r, c];
-                return null;
-            }
-            _shuffle(array) {
-                for (let i = array.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [array[i], array[j]] = [array[j], array[i]];
-                }
-            }
-        }
-
-        // --- MÓDULO: VALIDADOR ---
-        class Validator {
-            isMoveValid(board, row, col, num) {
-                for (let i = 0; i < 9; i++) {
-                    if (board[row][i] === num && i !== col) return false;
-                    if (board[i][col] === num && i !== row) return false;
-                }
-                const startRow = Math.floor(row / 3) * 3;
-                const startCol = Math.floor(col / 3) * 3;
-                for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) if (board[startRow + i][startCol + j] === num && (startRow + i !== row || startCol + j !== col)) return false;
-                return true;
-            }
-        }
-
-        // --- MÓDULO: JOGO ---
-        class SudokuGame {
-            constructor(canvasId) {
-                this.canvas = document.getElementById(canvasId);
-                this.ctx = this.canvas.getContext('2d');
-                this.loader = document.getElementById('loader-container');
-                this.hintBtn = document.getElementById('hint-btn');
-                this.notesBtn = document.getElementById('notes-btn');
-                this.difficulty = 'medium';
-                this.validator = new Validator();
-                this.generator = new SudokuGenerator();
-                this.selected = { row: -1, col: -1 };
-                this.boardSize = 0;
-                this.cellSize = 0;
-                
-                // Sistema de notas
-                this.isNotesMode = false;
-                this.notes = new Map(); // Armazena notas para cada célula (row*9+col)
-                
-                this.init();
-            }
-
-            init() {
-                this.setupCanvas();
-                this.startNewGame();
-                this.addEventListeners();
-                window.addEventListener('resize', () => this.resizeAndDraw());
-            }
-
-            setupCanvas() {
-                const container = this.canvas.parentElement;
-                const size = container.clientWidth;
-                this.canvas.width = size;
-                this.canvas.height = size;
-                this.boardSize = size;
-                this.cellSize = this.boardSize / 9;
-            }
-
-            startNewGame() {
-                this.showLoader();
-                setTimeout(() => {
-                    const { puzzle, solution } = this.generator.generate(this.difficulty);
-                    this.initialBoard = puzzle;
-                    this.solution = solution;
-                    this.playerBoard = this.initialBoard.map(row => [...row]);
-                    this.conflicts = this.createEmptyGrid(false);
-                    this.selected = { row: -1, col: -1 };
-                    this.hintsLeft = 3;
-                    
-                    // Limpar notas
-                    this.notes.clear();
-                    this.isNotesMode = false;
-                    this.updateNotesButton();
-                    
-                    this.updateHintButton();
-                    this.updateConflicts();
-                    this.draw();
-                    this.hideLoader();
-                }, 50);
-            }
-
-            resetBoard() {
-                if (!this.initialBoard) return;
-                this.playerBoard = this.initialBoard.map(row => [...row]);
-                
-                // Limpar notas no reset também
-                this.notes.clear();
-                
-                this.updateConflicts();
-                this.draw();
-            }
-
-            showLoader() { this.loader.classList.remove('hidden'); }
-            hideLoader() { this.loader.classList.add('hidden'); }
-            createEmptyGrid(initialValue) { return Array(9).fill(0).map(() => Array(9).fill(initialValue)); }
-
-            addEventListeners() {
-                this.canvas.addEventListener('click', this.handleCanvasClick.bind(this));
-                this.canvas.addEventListener('touchstart', this.handleCanvasClick.bind(this), { passive: true });
-                window.addEventListener('keydown', this.handleKeyDown.bind(this));
-                this.hintBtn.addEventListener('click', this.useHint.bind(this));
-            }
-
-            handleCanvasClick(e) {
-                const rect = this.canvas.getBoundingClientRect();
-                const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                const x = clientX - rect.left;
-                const y = clientY - rect.top;
-                const col = Math.floor(x / this.cellSize);
-                const row = Math.floor(y / this.cellSize);
-                if (col >= 0 && col < 9 && row >= 0 && row < 9) {
-                    this.selected = { row, col };
-                    this.draw();
-                }
-            }
-
-            handleKeyDown(e) {
-                if (this.selected.row === -1) return;
-                if (e.key >= '1' && e.key <= '9') {
-                    if (e.shiftKey) {
-                        // Shift + número = modo notas
-                        const wasNotesMode = this.isNotesMode;
-                        this.isNotesMode = true;
-                        this.placeNumber(this.selected.row, this.selected.col, parseInt(e.key));
-                        this.isNotesMode = wasNotesMode;
-                    } else {
-                        this.placeNumber(this.selected.row, this.selected.col, parseInt(e.key));
-                    }
-                } else if (e.key === 'Backspace' || e.key === 'Delete') {
-                    this.placeNumber(this.selected.row, this.selected.col, 0);
-                } else if (e.key.startsWith('Arrow')) {
-                    e.preventDefault();
-                    let { row, col } = this.selected;
-                    if (e.key === 'ArrowUp' && row > 0) row--;
-                    else if (e.key === 'ArrowDown' && row < 8) row++;
-                    else if (e.key === 'ArrowLeft' && col > 0) col--;
-                    else if (e.key === 'ArrowRight' && col < 8) col++;
-                    this.selected = { row, col };
-                    this.draw();
-                }
-            }
-
-            placeNumber(row, col, num) {
-                if (row === -1 || (this.initialBoard && this.initialBoard[row][col] !== 0)) return;
-                
-                if (this.isNotesMode && num > 0) {
-                    // Modo notas - adicionar/remover nota
-                    this.toggleNote(row, col, num);
-                } else {
-                    // Modo normal - colocar número
-                    this.playerBoard[row][col] = num;
-                    // Limpar notas da célula quando um número é colocado
-                    if (num > 0) {
-                        this.clearCellNotes(row, col);
-                    }
-                }
-                
-                this.updateConflicts();
-                this.draw();
-                this.checkWinCondition();
-            }
-
-            useHint() {
-                if (this.hintsLeft <= 0) return;
-                const emptyCells = [];
-                for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (this.playerBoard[r][c] === 0) emptyCells.push({ r, c });
-                if (emptyCells.length > 0) {
-                    const randomCell = emptyCells[Math.floor(Math.random() * emptyCells.length)];
-                    const { r, c } = randomCell;
-                    const correctNumber = this.solution[r][c];
-                    this.placeNumber(r, c, correctNumber);
-                    this.hintsLeft--;
-                    this.updateHintButton();
-                }
-            }
-
-            updateHintButton() {
-                this.hintBtn.textContent = `${translations[currentLang].hint} (${this.hintsLeft})`;
-                this.hintBtn.disabled = this.hintsLeft <= 0;
-            }
-
-            // Métodos do sistema de notas
-            toggleNotesMode() {
-                this.isNotesMode = !this.isNotesMode;
-                this.updateNotesButton();
-            }
-
-            updateNotesButton() {
-                this.notesBtn.classList.toggle('notes-active', this.isNotesMode);
-                
-                const t = translations[currentLang];
-                if (this.isNotesMode) {
-                    this.notesBtn.style.backgroundColor = '#7c3aed';
-                    this.notesBtn.textContent = `📝 ${t.notesActive}`;
-                } else {
-                    this.notesBtn.style.backgroundColor = '#8b5cf6';
-                    this.notesBtn.textContent = `📝 ${t.notes}`;
-                }
-            }
-
-            toggleNote(row, col, num) {
-                if (this.playerBoard[row][col] !== 0) return; // Não pode adicionar notas em células preenchidas
-                
-                const cellKey = row * 9 + col;
-                if (!this.notes.has(cellKey)) {
-                    this.notes.set(cellKey, new Set());
-                }
-                
-                const cellNotes = this.notes.get(cellKey);
-                if (cellNotes.has(num)) {
-                    cellNotes.delete(num);
-                } else {
-                    cellNotes.add(num);
-                }
-                
-                // Remove notas vazias
-                if (cellNotes.size === 0) {
-                    this.notes.delete(cellKey);
-                }
-            }
-
-            clearCellNotes(row, col) {
-                const cellKey = row * 9 + col;
-                this.notes.delete(cellKey);
-            }
-
-            showAnswer() {
-                this.playerBoard = this.solution.map(row => [...row]);
-                this.updateConflicts();
-                this.draw();
-            }
-
-            updateConflicts() {
-                this.conflicts = this.createEmptyGrid(false);
-                for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (this.playerBoard[r][c] !== 0) if (!this.validator.isMoveValid(this.playerBoard, r, c, this.playerBoard[r][c])) this.conflicts[r][c] = true;
-            }
-
-            checkWinCondition() {
-                for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) if (this.playerBoard[r][c] === 0 || this.conflicts[r][c]) return;
-                this.showWinModal();
-            }
-
-            showWinModal() {
-                const modal = document.getElementById('win-modal');
-                modal.classList.remove('hidden');
-                setTimeout(() => modal.querySelector('div').classList.remove('scale-95'), 10);
-            }
-
-            showConfirmModal() {
-                const modal = document.getElementById('confirm-modal');
-                modal.classList.remove('hidden');
-                setTimeout(() => modal.querySelector('div').classList.remove('scale-95'), 10);
-            }
-
-            hideConfirmModal() {
-                const modal = document.getElementById('confirm-modal');
-                modal.querySelector('div').classList.add('scale-95')
-                setTimeout(() => modal.classList.add('hidden'), 150);
-            }
-
-            draw() {
-                this.ctx.clearRect(0, 0, this.boardSize, this.boardSize);
-                this.drawHighlights();
-                this.drawGrid();
-                this.drawNumbers();
-            }
-
-            drawGrid() {
-                this.ctx.strokeStyle = '#9CA3AF';
-                for (let i = 0; i <= 9; i++) {
-                    this.ctx.lineWidth = (i % 3 === 0) ? 3 : 1;
-                    this.ctx.beginPath(); this.ctx.moveTo(i * this.cellSize, 0); this.ctx.lineTo(i * this.cellSize, this.boardSize); this.ctx.stroke();
-                    this.ctx.beginPath(); this.ctx.moveTo(0, i * this.cellSize); this.ctx.lineTo(this.boardSize, i * this.cellSize); this.ctx.stroke();
-                }
-            }
-
-            drawHighlights() {
-                if (this.selected.row === -1) return;
-                const { row, col } = this.selected;
-                const x = col * this.cellSize; const y = row * this.cellSize;
-                this.ctx.fillStyle = '#EBF4FF';
-                this.ctx.fillRect(0, y, this.boardSize, this.cellSize);
-                this.ctx.fillRect(x, 0, this.cellSize, this.boardSize);
-                const startRow = Math.floor(row / 3) * 3; const startCol = Math.floor(col / 3) * 3;
-                this.ctx.fillRect(startCol * this.cellSize, startRow * this.cellSize, this.cellSize * 3, this.cellSize * 3);
-                this.ctx.fillStyle = '#BFDBFE';
-                this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
-            }
-
-            drawNumbers() {
-                // Primeiro desenha as notas em células vazias
-                for (let r = 0; r < 9; r++) {
-                    for (let c = 0; c < 9; c++) {
-                        if (this.playerBoard[r][c] === 0) {
-                            this.drawCellNotes(r, c);
-                        }
-                    }
-                }
-                
-                // Depois desenha os números por cima das notas
-                const fontSize = this.cellSize * 0.6;
-                this.ctx.font = `bold ${fontSize}px 'Inter', 'Noto Sans JP', sans-serif`;
-                this.ctx.textAlign = 'center'; 
-                this.ctx.textBaseline = 'middle';
-                
-                for (let r = 0; r < 9; r++) {
-                    for (let c = 0; c < 9; c++) {
-                        const num = this.playerBoard[r][c];
-                        if (num !== 0) {
-                            const x = c * this.cellSize + this.cellSize / 2;
-                            const y = r * this.cellSize + this.cellSize / 2;
-                            
-                            // Cores diferentes para diferentes tipos de números
-                            if (this.conflicts[r][c]) {
-                                this.ctx.fillStyle = '#EF4444'; // Vermelho para conflitos
-                            } else if (this.initialBoard[r][c] !== 0) {
-                                this.ctx.fillStyle = '#000000'; // Preto para números do jogo original
-                            } else {
-                                this.ctx.fillStyle = '#1E3A8A'; // Azul escuro para números do jogador
-                            }
-                            this.ctx.fillText(num.toString(), x, y);
-                        }
-                    }
-                }
-            }
-
-            drawCellNotes(row, col) {
-                const cellKey = row * 9 + col;
-                const cellNotes = this.notes.get(cellKey);
-                
-                if (!cellNotes || cellNotes.size === 0) return;
-                
-                const noteSize = this.cellSize * 0.22;
-                this.ctx.font = `${noteSize}px 'Inter', sans-serif`;
-                this.ctx.fillStyle = '#F97316'; // Laranja para notas
-                this.ctx.textAlign = 'center';
-                this.ctx.textBaseline = 'middle';
-                
-                // Grid 3x3 para as notas dentro da célula
-                const cellX = col * this.cellSize;
-                const cellY = row * this.cellSize;
-                const noteSpacing = this.cellSize / 3;
-                
-                for (let note of cellNotes) {
-                    const noteRow = Math.floor((note - 1) / 3);
-                    const noteCol = (note - 1) % 3;
-                    const noteX = cellX + noteCol * noteSpacing + noteSpacing / 2;
-                    const noteY = cellY + noteRow * noteSpacing + noteSpacing / 2;
-                    
-                    this.ctx.fillText(note.toString(), noteX, noteY);
-                }
-            }
-
-            resizeAndDraw() { this.setupCanvas(); this.draw(); }
-        }
+        // O jogo agora usa a classe SudokuGame do módulo game-enhanced.js
+        // que inclui todos os sistemas avançados, incluindo o sistema de cores
 
         // --- PONTO DE ENTRADA DA APLICAÇÃO ---
         document.addEventListener('DOMContentLoaded', () => {
@@ -1002,7 +671,11 @@
 
             document.getElementById('new-game-btn').addEventListener('click', () => game.startNewGame());
             document.getElementById('reset-btn').addEventListener('click', () => game.resetBoard());
-            document.getElementById('notes-btn').addEventListener('click', () => game.toggleNotesMode());
+            document.getElementById('notes-btn').addEventListener('click', () => {
+                if (game.notesSystem) {
+                    game.notesSystem.toggleNotesMode();
+                }
+            });
 
             document.getElementById('modal-new-game-btn').addEventListener('click', () => {
                 document.getElementById('win-modal').classList.add('hidden');
@@ -1024,6 +697,19 @@
             document.getElementById('confirm-show-btn').addEventListener('click', () => {
                 game.showAnswer();
                 game.hideConfirmModal();
+            });
+
+            // Event listeners para os novos botões
+            // Botões undo/redo são gerenciados pelo history-system
+
+            document.getElementById('clear-colors-btn').addEventListener('click', () => {
+                if (game.colorSystem) {
+                    game.colorSystem.clearAllColors();
+                }
+            });
+
+            document.getElementById('settings-btn').addEventListener('click', () => {
+                alert('Configurações em desenvolvimento!');
             });
 
             // Lógica dos Seletores de Idioma

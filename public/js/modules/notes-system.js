@@ -38,6 +38,12 @@ export class NotesSystem {
             if (e.key === 'Shift' && !e.repeat) {
                 this.toggleNotesMode();
             }
+            
+            // Tecla Q para alternar modo notas
+            if (e.key.toLowerCase() === 'q' && !e.ctrlKey && !e.altKey) {
+                e.preventDefault();
+                this.toggleNotesMode();
+            }
         });
 
         document.addEventListener('keyup', (e) => {
@@ -50,9 +56,17 @@ export class NotesSystem {
         // Números 1-9 para adicionar/remover notas
         document.addEventListener('keydown', (e) => {
             const num = parseInt(e.key);
-            if (num >= 1 && num <= 9 && this.isNotesMode && this.activeCell) {
-                e.preventDefault();
-                this.toggleNote(this.activeCell, num);
+            if (num >= 1 && num <= 9 && this.isNotesMode) {
+                // Verificar se há uma célula selecionada no jogo
+                if (this.game.selected && this.game.selected.row !== -1 && this.game.selected.col !== -1) {
+                    const cellValue = this.game.playerBoard[this.game.selected.row][this.game.selected.col];
+                    // Só permitir notas em células vazias
+                    if (cellValue === 0) {
+                        e.preventDefault();
+                        const cellIndex = this.game.selected.row * 9 + this.game.selected.col;
+                        this.toggleNoteByIndex(cellIndex, num);
+                    }
+                }
             }
         });
 
@@ -163,6 +177,41 @@ export class NotesSystem {
         
         this.updateCellNotesDisplay(cell, cellIndex);
         this.saveNotesToStorage();
+
+        // Dispatch event so HistorySystem can record note changes
+        const event = new CustomEvent('sudoku-notes-changed', {
+            detail: {
+                cellIndex,
+                number,
+                action,
+                timestamp: Date.now()
+            }
+        });
+        document.dispatchEvent(event);
+    }
+
+    toggleNoteByIndex(cellIndex, number) {
+        if (!this.notesData.has(cellIndex)) {
+            this.notesData.set(cellIndex, new Set());
+        }
+
+        const notes = this.notesData.get(cellIndex);
+        
+        let action;
+        if (notes.has(number)) {
+            notes.delete(number);
+            action = 'remove';
+        } else {
+            notes.add(number);
+            action = 'add';
+        }
+        
+        this.saveNotesToStorage();
+        
+        // Redesenhar o jogo para mostrar as notas
+        if (this.game && this.game.draw) {
+            this.game.draw();
+        }
 
         // Dispatch event so HistorySystem can record note changes
         const event = new CustomEvent('sudoku-notes-changed', {

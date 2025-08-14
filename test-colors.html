@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste Sistema de Cores</title>
+    <style>
+        .game-controls {
+            display: flex;
+            gap: 10px;
+            margin: 20px;
+        }
+        .control-btn {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #notes-btn {
+            background-color: purple;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>Teste do Sistema de Cores</h1>
+    <div class="game-controls">
+        <button id="notes-btn" class="control-btn">📝 Notas</button>
+        <!-- O botão de cores deve aparecer aqui -->
+    </div>
+    
+    <div id="test-output"></div>
+    
+    <script type="module">
+        import { ColorSystem } from './public/js/modules/color-system.js';
+        
+        // Mock do game instance
+        const mockGame = {
+            canvas: document.createElement('canvas'),
+            cellSize: 50
+        };
+        
+        // Aguardar DOM estar pronto
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM carregado, inicializando ColorSystem...');
+            
+            setTimeout(() => {
+                const colorSystem = new ColorSystem(mockGame);
+                console.log('ColorSystem criado:', colorSystem);
+                
+                // Verificar se o botão foi criado
+                setTimeout(() => {
+                    const colorBtn = document.getElementById('color-btn');
+                    const output = document.getElementById('test-output');
+                    
+                    if (colorBtn) {
+                        output.innerHTML = '<p style="color: green;">✅ Botão de cores criado com sucesso!</p>';
+                        output.innerHTML += '<p>Pressione "C" para testar o atalho</p>';
+                    } else {
+                        output.innerHTML = '<p style="color: red;">❌ Botão de cores não foi criado</p>';
+                    }
+                }, 200);
+            }, 100);
+        });
+    </script>
+</body>
+</html>
