@@ -28,6 +28,15 @@ export class HighlightSystem {
                 this.clearHighlight();
             }
         });
+
+        // Reaplicar destaque quando notas mudarem
+        document.addEventListener('sudoku-notes-changed', () => {
+            if (this.selectedNumber) this.applyHighlight();
+        });
+        // Reaplicar também em mudanças em lote (limpeza automática)
+        document.addEventListener('sudoku-notes-batch-changed', () => {
+            if (this.selectedNumber) this.applyHighlight();
+        });
     }
 
     handleCellClick(cell) {
@@ -78,29 +87,41 @@ export class HighlightSystem {
             // Destaque do número selecionado
             if (value === this.selectedNumber) {
                 if (this.highlightMode === 'all' || this.highlightMode === 'conflicts') {
+                    cell.classList.add('highlight-number');
+                    
+                    // Conflitos
                     if (conflicts.includes(index)) {
                         cell.classList.add('highlight-conflict');
-                    } else {
-                        cell.classList.add('highlight-same');
                     }
                 }
-            }
-            
-            // Guias visuais (linha, coluna, quadrante)
-            if (this.highlightMode === 'all' || this.highlightMode === 'guides') {
-                const selectedCell = this.getSelectedCell();
-                if (selectedCell) {
-                    const selectedRow = Math.floor(selectedCell.index / 9);
-                    const selectedCol = selectedCell.index % 9;
-                    
-                    if (row === selectedRow) {
-                        cell.classList.add('highlight-guide-row');
+                
+                // Guias (linha/coluna/box) em volta da célula selecionada
+                if (this.highlightMode === 'guides' || this.highlightMode === 'all') {
+                    const selectedCell = this.getSelectedCell();
+                    if (selectedCell) {
+                        const selectedRow = Math.floor(selectedCell.index / 9);
+                        const selectedCol = selectedCell.index % 9;
+                        
+                        if (row === selectedRow) {
+                            cell.classList.add('highlight-guide-row');
+                        }
+                        if (col === selectedCol) {
+                            cell.classList.add('highlight-guide-col');
+                        }
+                        if (this.sameBox(row, col, selectedRow, selectedCol)) {
+                            cell.classList.add('highlight-guide-box');
+                        }
                     }
-                    if (col === selectedCol) {
-                        cell.classList.add('highlight-guide-col');
-                    }
-                    if (this.sameBox(row, col, selectedRow, selectedCol)) {
-                        cell.classList.add('highlight-guide-box');
+                }
+            } else {
+                // Também destacar células que contenham a nota com o número selecionado
+                const noteEl = cell.querySelector('.cell-notes .note-cell.note-active');
+                if (noteEl) {
+                    // Há várias notas; checar se alguma é o número
+                    const hasSelectedNote = Array.from(cell.querySelectorAll('.cell-notes .note-cell.note-active'))
+                        .some(n => parseInt(n.textContent) === this.selectedNumber);
+                    if (hasSelectedNote) {
+                        cell.classList.add('highlight-same');
                     }
                 }
             }

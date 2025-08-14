@@ -149,14 +149,28 @@ export class NotesSystem {
 
         const notes = this.notesData.get(cellIndex);
         
+        let action;
         if (notes.has(number)) {
             notes.delete(number);
+            action = 'remove';
         } else {
             notes.add(number);
+            action = 'add';
         }
-
+        
         this.updateCellNotesDisplay(cell, cellIndex);
         this.saveNotesToStorage();
+
+        // Dispatch event so HistorySystem can record note changes
+        const event = new CustomEvent('sudoku-notes-changed', {
+            detail: {
+                cellIndex,
+                number,
+                action,
+                timestamp: Date.now()
+            }
+        });
+        document.dispatchEvent(event);
     }
 
     updateCellNotesDisplay(cell, cellIndex) {
@@ -225,6 +239,8 @@ export class NotesSystem {
         const col = cellIndex % 9;
         const cells = document.querySelectorAll('.cell');
         
+        const removed = []; // collect removed notes for history
+        
         cells.forEach((cell, index) => {
             const r = Math.floor(index / 9);
             const c = index % 9;
@@ -235,11 +251,24 @@ export class NotesSystem {
                     const notes = this.notesData.get(index);
                     if (notes.has(number)) {
                         notes.delete(number);
+                        removed.push({ cellIndex: index, number });
                         this.updateCellNotesDisplay(cell, index);
                     }
                 }
             }
         });
+
+        // If any note was removed, dispatch a batch event (action: remove)
+        if (removed.length > 0) {
+            const batchEvent = new CustomEvent('sudoku-notes-batch-changed', {
+                detail: {
+                    action: 'remove',
+                    changes: removed,
+                    timestamp: Date.now()
+                }
+            });
+            document.dispatchEvent(batchEvent);
+        }
     }
 
     sameBox(row1, col1, row2, col2) {
@@ -267,7 +296,7 @@ export class NotesSystem {
             }
         }
 
-        // Limpar notas relacionadas na região
+        // Limpar notas relacionadas na região (and emit batch event)
         this.clearNotesInRegion(cellIndex, number);
         this.saveNotesToStorage();
     }
@@ -361,5 +390,24 @@ export class NotesSystem {
         this.setActiveCell(null);
         this.setNotesMode(false);
         localStorage.removeItem('sudoku-notes');
+    }
+
+    applyNoteChange(cellIndex, number, action) {
+        if (!this.notesData.has(cellIndex)) {
+            this.notesData.set(cellIndex, new Set());
+        }
+        const notes = this.notesData.get(cellIndex);
+        const cell = this.getCellByIndex(cellIndex);
+
+        if (action === 'add') {
+            notes.add(number);
+        } else if (action === 'remove') {
+            notes.delete(number);
+        }
+
+        if (cell) {
+            this.updateCellNotesDisplay(cell, cellIndex);
+        }
+        this.saveNotesToStorage();
     }
 }
