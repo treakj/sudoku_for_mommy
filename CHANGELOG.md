@@ -68,9 +68,25 @@ Todas as mudanças importantes neste projeto serão documentadas neste arquivo.
 
 ---
 
+## [v0.8.0] - 2025-01-14
+
+### 🎮 Correções de Interface e UX
+- **Corrigido** problema de células não coloridas e falta de feedback visual
+- **Adicionado** feedback visual claro para seleção de cores (borda azul destacada)
+- **Corrigido** botão "Nota" sem indicador de estado ativo
+- **Estados visuais** distintos para botão de notas (roxo quando ativo, cinza quando inativo)
+- **Corrigido** tamanho da fonte dos números principais (aumentado para 0.7 do tamanho da célula)
+- **Adicionado** font-weight bold para melhor diferenciação
+- **Verificado** sistema de tradução do "Como jogar" funcionando corretamente
+
+### 🔧 Melhorias Técnicas
+- **Versão atualizada** de 0.7 para 0.8 em toda a interface
+- **Feedback visual aprimorado** para interações do usuário
+- **Estabilidade** geral do sistema de cores melhorada
+
 ## 🚀 Próximas Funcionalidades Planejadas
 
-### v0.8.0 - Modo Competitivo
+### v0.9.0 - Modo Competitivo
 - [ ] Timer e cronômetro
 - [ ] Sistema de pontuação
 - [ ] Ranking de melhores tempos

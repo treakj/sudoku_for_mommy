@@ -68,8 +68,13 @@ export class ColorSystem {
     }
 
     setupToggleButton() {
-        // Sistema de cores sempre ativo, botão não necessário
-        this.toggleButton = null;
+        // Configurar botão para abrir/fechar paleta de cores
+        this.toggleButton = document.getElementById('color-btn');
+        if (this.toggleButton) {
+            console.log('✅ Botão de cores encontrado:', this.toggleButton);
+        } else {
+            console.error('❌ Botão de cores não encontrado');
+        }
     }
 
     createColorIndicator() {
@@ -89,7 +94,13 @@ export class ColorSystem {
     }
 
     attachEventListeners() {
-        // Sistema de cores sempre ativo, sem botão de toggle
+        // Listener para botão de cores
+        if (this.toggleButton) {
+            this.toggleButton.addEventListener('click', () => {
+                console.log('🎨 Botão de cores clicado');
+                this.toggleColorPalette();
+            });
+        }
 
         // Listeners para a paleta de cores
         document.addEventListener('click', (e) => {
@@ -135,17 +146,11 @@ export class ColorSystem {
         
         if (shouldShow) {
             this.palette.classList.remove('hidden');
-            this.isColorMode = true;
-            this.updateToggleButton(true);
-            console.log('🎨 Modo de cores ATIVADO - Clique em uma cor e depois em uma célula');
-            this.showColorFeedback('Modo de cores ativado! Selecione uma cor.');
+            console.log('🎨 Paleta de cores ABERTA - Selecione uma cor');
+            this.showColorFeedback('Paleta de cores aberta! Selecione uma cor.');
         } else {
             this.palette.classList.add('hidden');
-            this.isColorMode = false;
-            this.selectedColor = null;
-            this.updateToggleButton(false);
-            this.clearColorSelection();
-            console.log('🎨 Modo de cores DESATIVADO');
+            console.log('🎨 Paleta de cores FECHADA');
         }
     }
 
@@ -211,11 +216,17 @@ export class ColorSystem {
         const colorBtns = this.palette.querySelectorAll('.color-btn');
         colorBtns.forEach(btn => {
             if (btn.dataset.color === selectedColor) {
-                btn.classList.add('ring-2', 'ring-blue-500');
+                btn.classList.add('selected', 'ring-2', 'ring-blue-500');
+                btn.classList.add('ring-offset-2', 'ring-offset-white');
             } else {
-                btn.classList.remove('ring-2', 'ring-blue-500');
+                btn.classList.remove('selected', 'ring-2', 'ring-blue-500', 'ring-offset-2', 'ring-offset-white');
             }
         });
+        
+        // Adicionar feedback visual
+        if (selectedColor && selectedColor !== 'clear') {
+            this.showColorFeedback(selectedColor);
+        }
     }
 
     clearColorSelection() {

@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jogo de Sudoku v0.7</title>
+    <title>Jogo de Sudoku v0.8</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -282,6 +282,75 @@
             min-width: 32px;
         }
 
+        /* Estilos melhorados para o botão de notas */
+        #notes-btn {
+            position: relative;
+            background-color: #8b5cf6 !important;
+            transition: all 0.3s ease !important;
+        }
+
+        #notes-btn.notes-active {
+            background-color: #7c3aed !important;
+            color: white !important;
+            box-shadow: 0 0 0 3px #a855f7, 0 0 20px rgba(124, 58, 237, 0.6) !important;
+            transform: scale(1.1) !important;
+            border: 3px solid #5b21b6 !important;
+        }
+
+        #notes-btn.notes-active::before {
+            content: '✓';
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: #10b981;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: bold;
+            border: 2px solid white;
+        }
+
+        #notes-btn.notes-active:hover {
+            background-color: #6d28d9 !important;
+            transform: scale(1.12) !important;
+        }
+
+        /* Feedback visual para seleção de cores */
+        .color-btn {
+            transition: all 0.2s ease;
+            border: 2px solid #d1d5db;
+            position: relative;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 8px rgba(0, 0, 0, 0.2);
+            border-color: #6b7280;
+        }
+
+        .color-btn.selected {
+            border: 4px solid #2563eb !important;
+            box-shadow: 0 0 0 2px white, 0 0 0 6px #2563eb, 0 0 20px rgba(37, 99, 235, 0.4) !important;
+            transform: scale(1.2) !important;
+        }
+
+        .color-btn.selected::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+
         /* Estilos para o sistema de cores */
         #color-indicator {
             animation: fadeIn 0.3s ease-in;
@@ -330,13 +399,13 @@
 
     <div class="w-full max-w-2xl mx-auto">
         <header class="text-center mb-4 relative">
-            <h1 id="main-title" class="text-3xl md:text-4xl font-bold text-gray-900">Jogo de Sudoku <span class="text-lg text-blue-600">v0.7</span></h1>
+            <h1 id="main-title" class="text-3xl md:text-4xl font-bold text-gray-900">Jogo de Sudoku <span class="text-lg text-blue-600">v0.8</span></h1>
             <p id="subtitle" class="text-gray-600 mt-1">Desafie sua lógica e divirta-se!</p>
             
             <!-- Indicações de Controle -->
             <div class="controls-info-panel mt-4">
                 <details class="controls-info">
-                    <summary class="controls-summary">ℹ️ <span id="how-to-play-title">Como Jogar</span></summary>
+                    <summary class="controls-summary">ℹ️ <span id="how-to-play-title" data-translate="how-to-play">Como Jogar</span></summary>
                     <div class="controls-content" id="how-to-play-content">
                         <div class="control-section">
                             <h4>⌨️ <span data-translate="keyboard">Teclado</span></h4>
@@ -428,6 +497,8 @@
 
             <!-- Controles de Ação - Segunda Linha -->
             <div class="flex flex-wrap gap-2 sm:gap-4 justify-center mb-4 game-controls">
+                <button id="color-btn"
+                    class="btn-action bg-orange-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-orange-600 transition-transform transform hover:scale-105">🎨 Cores</button>
                 <button id="hint-btn"
                     class="btn-action bg-green-500 text-white px-4 py-2 rounded-md font-semibold hover:bg-green-600 transition-transform transform hover:scale-105"
                     data-lang-key="hint">Dica (3)</button>
@@ -541,7 +612,28 @@
                 confirmSubtitle: "This will fill the entire board and end the current game. Are you sure?",
                 cancel: "Cancel",
                 confirm: "Confirm",
-                langToggle: "JP"
+                langToggle: "JP",
+                "how-to-play": "How to Play",
+                keyboard: "Keyboard",
+                "mouse-touch": "Mouse/Touch",
+                features: "Features",
+                "insert-numbers": "Insert numbers",
+                "notes-mode": "Notes mode",
+                "toggle-notes": "Toggle notes mode",
+                "cycle-colors": "Cycle through colors",
+                "apply-color": "Apply selected color",
+                undo: "Undo",
+                redo: "Redo",
+                hint: "Hint",
+                delete: "Delete",
+                navigate: "Navigate",
+                "click-select": "Click to select cell",
+                "click-highlight": "Click number to highlight",
+                "mobile-panel": "Mobile: Use bottom panel",
+                "number-counter": "Number counter (corner)",
+                "notes-system": "Notes system",
+                "color-system": "Color system",
+                "auto-highlight": "Auto highlight"
             },
             pt: {
                 mainTitle: "Jogo Sudoku",
@@ -569,7 +661,28 @@
                 confirmSubtitle: "Isso preencherá todo o tabuleiro e encerrará o jogo atual. Tem certeza?",
                 cancel: "Cancelar",
                 confirm: "Confirmar",
-                langToggle: "JP"
+                langToggle: "JP",
+                "how-to-play": "Como Jogar",
+                keyboard: "Teclado",
+                "mouse-touch": "Mouse/Touch",
+                features: "Recursos",
+                "insert-numbers": "Inserir números",
+                "notes-mode": "Modo notas",
+                "toggle-notes": "Alternar modo notas",
+                "cycle-colors": "Alternar entre cores",
+                "apply-color": "Aplicar cor selecionada",
+                undo: "Desfazer",
+                redo: "Refazer",
+                hint: "Dica",
+                delete: "Apagar",
+                navigate: "Navegar",
+                "click-select": "Clique para selecionar célula",
+                "click-highlight": "Clique em número para destacar",
+                "mobile-panel": "Mobile: Use painel inferior",
+                "number-counter": "Contador de números (canto)",
+                "notes-system": "Sistema de notas",
+                "color-system": "Sistema de cores",
+                "auto-highlight": "Destaque automático"
             },
             ja: {
                 mainTitle: "数独ゲーム　（母ちゃん用）",
@@ -597,7 +710,28 @@
                 confirmSubtitle: "これにより、すべてのマスが埋められ、現在のゲームは終了します。よろしいですか？",
                 cancel: "キャンセル",
                 confirm: "確認",
-                langToggle: "PT"
+                langToggle: "PT",
+                "how-to-play": "遊び方",
+                keyboard: "キーボード",
+                "mouse-touch": "マウス/タッチ",
+                features: "機能",
+                "insert-numbers": "数字を入力",
+                "notes-mode": "メモモード",
+                "toggle-notes": "メモモード切替",
+                "cycle-colors": "色を循環",
+                "apply-color": "選択した色を適用",
+                undo: "元に戻す",
+                redo: "やり直す",
+                hint: "ヒント",
+                delete: "削除",
+                navigate: "ナビゲート",
+                "click-select": "クリックしてセルを選択",
+                "click-highlight": "数字をクリックしてハイライト",
+                "mobile-panel": "モバイル: 下のパネルを使用",
+                "number-counter": "数字カウンター（角）",
+                "notes-system": "メモシステム",
+                "color-system": "カラーシステム",
+                "auto-highlight": "自動ハイライト"
             }
         };
 
@@ -632,6 +766,14 @@
             document.getElementById('confirm-subtitle').textContent = t.confirmSubtitle;
             document.getElementById('confirm-cancel-btn').textContent = t.cancel;
             document.getElementById('confirm-show-btn').textContent = t.confirm;
+            
+            // Atualizar elementos com data-translate
+            document.querySelectorAll('[data-translate]').forEach(element => {
+                const key = element.getAttribute('data-translate');
+                if (t[key]) {
+                    element.textContent = t[key];
+                }
+            });
             
             // Atualizar botões de idioma
             updateLanguageButtons();

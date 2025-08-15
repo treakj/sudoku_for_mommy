@@ -617,7 +617,8 @@ export class SudokuGame {
      * Desenha os números
      */
     drawNumbers() {
-        this.ctx.font = `${this.cellSize * 0.6}px Arial`;
+        // Fonte bem maior para números principais
+        this.ctx.font = `bold ${this.cellSize * 0.8}px Arial`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         
@@ -657,8 +658,8 @@ export class SudokuGame {
         
         if (!notes || notes.size === 0) return;
         
-        // Configuração para notas pequenas
-        this.ctx.font = `${this.cellSize * 0.2}px Arial`;
+        // Configuração para notas bem pequenas (contraste com números principais)
+        this.ctx.font = `${this.cellSize * 0.18}px Arial`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         
