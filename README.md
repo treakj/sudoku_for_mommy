@@ -1,6 +1,24 @@
-# 🎮 Sudoku for Mommy
+# 🧩 Sudoku for Mommy - v0.9
 
 Um jogo de Sudoku moderno e responsivo com suporte a múltiplos idiomas (Português, Inglês e Japonês).
+
+## 🎮 Recursos da Versão 0.9
+
+### 🎨 **Sistema de Paletas de Cores para Notas**
+- **6 Paletas Únicas**: Laranja, Azul, Verde, Roxo, Rosa, Vermelho
+- **Tecla C**: Alterna entre paletas de cores
+- **Visual Dinâmico**: Botão de notas muda de cor conforme a paleta
+- **Persistência**: Lembra da sua paleta preferida
+
+### ⌨️ **Novos Atalhos de Teclado**
+- **Q ou N**: Ativa/desativa modo de anotações
+- **C**: Alterna entre paletas de cores das notas
+- **1-9**: Adiciona números ou notas (dependendo do modo)
+
+### 🎯 **Melhorias Visuais**
+- **Botão de Notas Aprimorado**: Bordas bold e animação pulse quando ativo
+- **Feedback Visual**: Notificações ao trocar paletas
+- **Fontes Corrigidas**: Números principais mantêm tamanho consistente
 
 ## 🌟 Características
 
@@ -11,7 +29,7 @@ Um jogo de Sudoku moderno e responsivo com suporte a múltiplos idiomas (Portugu
 - **Validação em Tempo Real**: Destaque de conflitos
 - **Navegação por Teclado**: Suporte completo para teclado
 - **Design Moderno**: Interface limpa usando Tailwind CSS
-- **Sistema de Cores Avançado**: 6 cores + indicador visual da cor ativa
+- **Sistema de Paletas de Cores**: 6 paletas para personalizar notas
 - **Sistema de Notas**: Anotações integradas com cores personalizadas
 - **Undo/Redo**: Desfaça e refaça qualquer ação
 - **Interface Organizada**: Controles intuitivos em 2 linhas
@@ -21,11 +39,9 @@ Um jogo de Sudoku moderno e responsivo com suporte a múltiplos idiomas (Portugu
 ### Controles de Teclado
 - **Setas**: Navegar pelo tabuleiro
 - **1-9**: Inserir números
-- **Shift + 1-9**: Modo notas (anotar possibilidades)
+- **Q ou N**: Ativar/desativar modo notas
+- **C**: Alternar entre paletas de cores das notas
 - **Backspace/Delete**: Apagar números
-- **Q**: Alternar modo notas
-- **C**: Alternar entre cores (vermelho → azul → verde → amarelo → roxo → laranja → limpar)
-- **Espaço**: Aplicar cor selecionada na célula atual
 - **H**: Usar dica
 - **Ctrl+Z**: Desfazer última ação
 - **Ctrl+Y**: Refazer última ação
