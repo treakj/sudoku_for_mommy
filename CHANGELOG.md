@@ -2,6 +2,69 @@
 
 Todas as mudanças importantes neste projeto serão documentadas neste arquivo.
 
+## [v0.9.1] - 2025-01-14
+
+### 🎨 **Correções Importantes do Sistema de Cores**
+
+#### **Notas Mantêm Cores Individuais**
+- ✅ **CORRIGIDO**: Notas agora mantêm suas cores originais mesmo quando a paleta é alterada
+- ✅ **CORRIGIDO**: Cada nota tem sua cor específica independente da paleta atual
+- ✅ **Estrutura de Dados Atualizada**: 
+  ```javascript
+  // Antes: cellIndex -> Set(numbers)
+  // Agora: cellIndex -> Map(number -> {color, timestamp})
+  ```
+
+#### **Funcionalidade de Mudança de Cor**
+- ✅ **NOVO COMPORTAMENTO**: Ao escrever o mesmo número com paleta diferente, muda a cor ao invés de apagar
+- ✅ **Lógica Aprimorada**:
+  - Mesmo número + mesma cor = Remove a nota
+  - Mesmo número + cor diferente = Muda a cor da nota
+  - Número novo = Adiciona com cor atual
+
+#### **Compatibilidade e Migração**
+- ✅ **Retrocompatibilidade**: Notas antigas (formato Set) são convertidas automaticamente
+- ✅ **Persistência**: Sistema salva e carrega cores individuais das notas
+- ✅ **Canvas Atualizado**: Renderização mostra cada nota com sua cor específica
+
+### 🔧 **Melhorias Técnicas**
+
+#### **Estrutura de Dados**
+- ✅ **Map ao invés de Set**: Permite armazenar metadados (cor, timestamp) para cada nota
+- ✅ **Migração Automática**: Converte dados antigos para novo formato transparentemente
+- ✅ **Performance**: Mesma performance com funcionalidades avançadas
+
+#### **Renderização no Canvas**
+- ✅ **Cores Individuais**: Cada nota é desenhada com sua cor específica
+- ✅ **Otimização**: Renderização eficiente mesmo com múltiplas cores
+- ✅ **Consistência Visual**: Cores mantidas entre sessões
+
+### 🎯 **Comportamento Atualizado**
+
+#### **Sistema de Notas com Cores**
+| Ação | Resultado |
+|------|-----------|
+| **Novo número** | Adiciona com cor da paleta atual |
+| **Mesmo número + mesma cor** | Remove a nota |
+| **Mesmo número + cor diferente** | Muda para nova cor |
+| **Trocar paleta (C)** | Notas existentes mantêm suas cores |
+
+### 🐛 **Problemas Corrigidos**
+
+1. **Notas Perdiam Cores Individuais**
+   - **Problema**: Todas as notas mudavam de cor ao alterar paleta
+   - **Solução**: Cada nota agora tem cor independente e persistente
+
+2. **Impossibilidade de Mudar Cor de Nota Existente**
+   - **Problema**: Escrever mesmo número sempre apagava a nota
+   - **Solução**: Paleta diferente muda cor, paleta igual remove nota
+
+3. **Perda de Dados ao Alterar Paleta**
+   - **Problema**: Sistema não diferenciava cores de notas individuais
+   - **Solução**: Estrutura Map com metadados completos
+
+---
+
 ## [v0.9] - 2025-01-14
 
 ### 🎨 **Novas Funcionalidades**

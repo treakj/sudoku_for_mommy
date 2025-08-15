@@ -6,7 +6,8 @@
 export class NotesSystem {
     constructor(gameInstance) {
         this.game = gameInstance;
-        this.notesData = new Map(); // Armazena notas para cada célula
+        // Estrutura: cellIndex -> { number -> { color, timestamp } }
+        this.notesData = new Map(); // Armazena notas com cores individuais
         this.isNotesMode = false;
         this.activeCell = null;
         this.maxNotesPerCell = 9;
@@ -206,21 +207,38 @@ export class NotesSystem {
     }
 
     /**
-     * Toggle de nota por índice da célula
+     * Toggle de nota por índice da célula com sistema de cores
      */
     toggleNoteByIndex(cellIndex, number) {
         if (!this.notesData.has(cellIndex)) {
-            this.notesData.set(cellIndex, new Set());
+            this.notesData.set(cellIndex, new Map());
         }
 
         const notes = this.notesData.get(cellIndex);
+        const currentColor = this.getCurrentPaletteColor();
         
         let action;
         if (notes.has(number)) {
-            notes.delete(number);
-            action = 'remove';
+            const existingNote = notes.get(number);
+            
+            // Se a cor é diferente, muda a cor ao invés de apagar
+            if (existingNote.color !== currentColor) {
+                notes.set(number, { 
+                    color: currentColor, 
+                    timestamp: Date.now() 
+                });
+                action = 'color-change';
+            } else {
+                // Se a cor é a mesma, remove a nota
+                notes.delete(number);
+                action = 'remove';
+            }
         } else {
-            notes.add(number);
+            // Adiciona nova nota com cor atual
+            notes.set(number, { 
+                color: currentColor, 
+                timestamp: Date.now() 
+            });
             action = 'add';
         }
         
@@ -232,7 +250,8 @@ export class NotesSystem {
                 cellIndex,
                 number,
                 action,
-                notes: Array.from(notes)
+                color: currentColor,
+                notes: this.getNotesArrayForCell(cellIndex)
             }
         });
         document.dispatchEvent(event);
@@ -241,6 +260,29 @@ export class NotesSystem {
         if (this.game && this.game.draw) {
             this.game.draw();
         }
+    }
+
+    /**
+     * Obtém array de notas para uma célula (compatibilidade)
+     */
+    getNotesArrayForCell(cellIndex) {
+        if (!this.notesData.has(cellIndex)) {
+            return [];
+        }
+        
+        const notes = this.notesData.get(cellIndex);
+        return Array.from(notes.keys());
+    }
+
+    /**
+     * Obtém notas com cores para uma célula
+     */
+    getNotesWithColorsForCell(cellIndex) {
+        if (!this.notesData.has(cellIndex)) {
+            return new Map();
+        }
+        
+        return this.notesData.get(cellIndex);
     }
 
     /**
@@ -305,17 +347,34 @@ export class NotesSystem {
         const cellIndex = this.getCellIndex(cell);
         
         if (!this.notesData.has(cellIndex)) {
-            this.notesData.set(cellIndex, new Set());
+            this.notesData.set(cellIndex, new Map());
         }
 
         const notes = this.notesData.get(cellIndex);
+        const currentColor = this.getCurrentPaletteColor();
         
         let action;
         if (notes.has(number)) {
-            notes.delete(number);
-            action = 'remove';
+            const existingNote = notes.get(number);
+            
+            // Se a cor é diferente, muda a cor ao invés de apagar
+            if (existingNote.color !== currentColor) {
+                notes.set(number, { 
+                    color: currentColor, 
+                    timestamp: Date.now() 
+                });
+                action = 'color-change';
+            } else {
+                // Se a cor é a mesma, remove a nota
+                notes.delete(number);
+                action = 'remove';
+            }
         } else {
-            notes.add(number);
+            // Adiciona nova nota com cor atual
+            notes.set(number, { 
+                color: currentColor, 
+                timestamp: Date.now() 
+            });
             action = 'add';
         }
         
@@ -328,6 +387,7 @@ export class NotesSystem {
                 cellIndex,
                 number,
                 action,
+                color: currentColor,
                 timestamp: Date.now()
             }
         });
@@ -336,17 +396,34 @@ export class NotesSystem {
 
     toggleNoteByIndex(cellIndex, number) {
         if (!this.notesData.has(cellIndex)) {
-            this.notesData.set(cellIndex, new Set());
+            this.notesData.set(cellIndex, new Map());
         }
 
         const notes = this.notesData.get(cellIndex);
+        const currentColor = this.getCurrentPaletteColor();
         
         let action;
         if (notes.has(number)) {
-            notes.delete(number);
-            action = 'remove';
+            const existingNote = notes.get(number);
+            
+            // Se a cor é diferente, muda a cor ao invés de apagar
+            if (existingNote.color !== currentColor) {
+                notes.set(number, { 
+                    color: currentColor, 
+                    timestamp: Date.now() 
+                });
+                action = 'color-change';
+            } else {
+                // Se a cor é a mesma, remove a nota
+                notes.delete(number);
+                action = 'remove';
+            }
         } else {
-            notes.add(number);
+            // Adiciona nova nota com cor atual
+            notes.set(number, { 
+                color: currentColor, 
+                timestamp: Date.now() 
+            });
             action = 'add';
         }
         
@@ -363,6 +440,7 @@ export class NotesSystem {
                 cellIndex,
                 number,
                 action,
+                color: currentColor,
                 timestamp: Date.now()
             }
         });
@@ -397,8 +475,10 @@ export class NotesSystem {
             noteCell.className = 'note-cell';
             
             if (notes.has(i)) {
+                const noteData = notes.get(i);
                 noteCell.textContent = i;
                 noteCell.classList.add('note-active');
+                noteCell.style.color = noteData.color;
             }
             
             notesContainer.appendChild(noteCell);
@@ -512,8 +592,17 @@ export class NotesSystem {
             }
         }
 
-        // Atualizar notas
-        this.notesData.set(cellIndex, new Set(possible));
+        // Atualizar notas com cor atual
+        const notesMap = new Map();
+        const currentColor = this.getCurrentPaletteColor();
+        possible.forEach(num => {
+            notesMap.set(num, { 
+                color: currentColor, 
+                timestamp: Date.now() 
+            });
+        });
+        
+        this.notesData.set(cellIndex, notesMap);
         this.updateCellNotesDisplay(cell, cellIndex);
     }
 
@@ -552,9 +641,13 @@ export class NotesSystem {
     saveNotesToStorage() {
         const notesArray = [];
         this.notesData.forEach((notes, cellIndex) => {
+            const notesWithColors = {};
+            notes.forEach((noteData, number) => {
+                notesWithColors[number] = noteData;
+            });
             notesArray.push({
                 cellIndex,
-                notes: Array.from(notes)
+                notes: notesWithColors
             });
         });
         localStorage.setItem('sudoku-notes', JSON.stringify(notesArray));
@@ -566,7 +659,25 @@ export class NotesSystem {
             if (saved) {
                 const notesArray = JSON.parse(saved);
                 notesArray.forEach(item => {
-                    this.notesData.set(item.cellIndex, new Set(item.notes));
+                    const notesMap = new Map();
+                    
+                    // Compatibilidade com formato antigo (array de números)
+                    if (Array.isArray(item.notes)) {
+                        const defaultColor = this.colorPalettes[0].color;
+                        item.notes.forEach(number => {
+                            notesMap.set(number, { 
+                                color: defaultColor, 
+                                timestamp: Date.now() 
+                            });
+                        });
+                    } else {
+                        // Novo formato (objeto com cores)
+                        Object.entries(item.notes).forEach(([number, noteData]) => {
+                            notesMap.set(parseInt(number), noteData);
+                        });
+                    }
+                    
+                    this.notesData.set(item.cellIndex, notesMap);
                     const cell = this.getCellByIndex(item.cellIndex);
                     if (cell) {
                         this.updateCellNotesDisplay(cell, item.cellIndex);
@@ -588,17 +699,27 @@ export class NotesSystem {
         localStorage.removeItem('sudoku-notes');
     }
 
-    applyNoteChange(cellIndex, number, action) {
+    applyNoteChange(cellIndex, number, action, color = null) {
         if (!this.notesData.has(cellIndex)) {
-            this.notesData.set(cellIndex, new Set());
+            this.notesData.set(cellIndex, new Map());
         }
         const notes = this.notesData.get(cellIndex);
         const cell = this.getCellByIndex(cellIndex);
 
         if (action === 'add') {
-            notes.add(number);
+            const noteColor = color || this.getCurrentPaletteColor();
+            notes.set(number, { 
+                color: noteColor, 
+                timestamp: Date.now() 
+            });
         } else if (action === 'remove') {
             notes.delete(number);
+        } else if (action === 'color-change') {
+            const noteColor = color || this.getCurrentPaletteColor();
+            notes.set(number, { 
+                color: noteColor, 
+                timestamp: Date.now() 
+            });
         }
 
         if (cell) {

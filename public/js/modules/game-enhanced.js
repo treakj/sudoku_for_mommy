@@ -659,19 +659,18 @@ export class SudokuGame {
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         
-        // Usar cor da paleta atual
-        const noteColor = this.notesSystem.getCurrentPaletteColor();
-        this.ctx.fillStyle = noteColor;
-        
-        // Desenhar notas em grid 3x3
+        // Desenhar notas em grid 3x3 com cores individuais
         for (let i = 1; i <= 9; i++) {
             if (notes.has(i)) {
+                const noteData = notes.get(i);
                 const noteRow = Math.floor((i - 1) / 3);
                 const noteCol = (i - 1) % 3;
                 
                 const x = col * this.cellSize + (noteCol + 0.5) * (this.cellSize / 3);
                 const y = row * this.cellSize + (noteRow + 0.5) * (this.cellSize / 3);
                 
+                // Usar a cor específica desta nota
+                this.ctx.fillStyle = noteData.color;
                 this.ctx.fillText(i.toString(), x, y);
             }
         }
