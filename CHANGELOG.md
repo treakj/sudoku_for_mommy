@@ -2,6 +2,105 @@
 
 Todas as mudanças importantes neste projeto serão documentadas neste arquivo.
 
+## [v0.9] - 2025-01-14
+
+### 🎨 **Novas Funcionalidades**
+
+#### **Sistema de Paletas de Cores para Notas**
+- ✅ **6 Paletas de Cores**: Laranja, Azul, Verde, Roxo, Rosa, Vermelho
+- ✅ **Tecla C**: Alterna entre paletas de cores para notas
+- ✅ **Notificação Visual**: Mostra a paleta atual ao trocar
+- ✅ **Persistência**: Salva a paleta preferida no localStorage
+
+#### **Novos Atalhos de Teclado**
+- ✅ **Tecla Q**: Ativa/desativa modo de notas (além do Shift)
+- ✅ **Tecla N**: Ativa/desativa modo de notas (alternativa)
+- ✅ **Tecla C**: Alterna entre paletas de cores
+
+#### **Melhorias Visuais do Botão de Notas**
+- ✅ **Bordas Bold**: Contorno mais grosso quando ativo
+- ✅ **Cor Dinâmica**: Muda para a cor da paleta atual
+- ✅ **Animação Pulse**: Efeito pulsante quando ativo
+- ✅ **Feedback Visual**: Indica claramente quando está ativo
+
+### 🔧 **Correções**
+
+#### **Problema de Tamanho de Fonte**
+- 🐛 **PROBLEMA IDENTIFICADO**: O método `drawNumbers()` estava definindo a fonte globalmente no contexto do canvas, afetando tanto números principais quanto notas
+- ✅ **SOLUÇÃO**: Separação da configuração de fonte:
+  ```javascript
+  // Antes (problemático):
+  this.ctx.font = `bold ${this.cellSize * 0.8}px Arial`; // Global
+  
+  // Depois (correto):
+  // Em drawNumbers():
+  this.ctx.font = `bold ${this.cellSize * 0.7}px Arial`; // Para números
+  
+  // Em drawCellNotes():
+  this.ctx.font = `${this.cellSize * 0.2}px Arial`; // Para notas
+  ```
+- ✅ **RESULTADO**: Números principais mantêm tamanho consistente, independente das notas
+
+#### **Remoção do Sistema de Cores Obsoleto**
+- 🗑️ **Removido**: `color-system.js` que não estava sendo usado
+- 🗑️ **Removido**: Import do ColorSystem no game-enhanced.js
+- ✅ **Limpeza**: Código mais limpo e organizado
+
+### 🏗️ **Melhorias Técnicas**
+
+#### **Sistema de Notas Aprimorado**
+- ✅ **Integração com Canvas**: Notas usam cor da paleta atual
+- ✅ **Método toggleNoteByIndex()**: Manipulação direta por índice de célula
+- ✅ **Compatibilidade Mobile**: Funciona com painel de números touch
+- ✅ **Performance**: Redesenho otimizado do canvas
+
+#### **Organização de Código**
+- ✅ **Separação de Responsabilidades**: Sistema de paletas dentro do NotesSystem
+- ✅ **Métodos Específicos**: `getCurrentPaletteColor()`, `cyclePalette()`, etc.
+- ✅ **Persistência**: Salva/carrega configurações automaticamente
+
+### 📱 **Compatibilidade**
+
+#### **Desktop**
+- ✅ **Teclas de Atalho**: Q, N, C funcionam perfeitamente
+- ✅ **Visual**: Animações e efeitos responsivos
+
+#### **Mobile/Touch**
+- ✅ **Painel de Números**: Funciona com modo notas
+- ✅ **Botão Visual**: Mudança de cor visível em touch devices
+- ✅ **Performance**: Renderização otimizada para dispositivos móveis
+
+### 🎯 **Controles Atualizados**
+
+| Ação | Tecla/Botão | Descrição |
+|------|-------------|-----------|
+| **Modo Notas** | Q ou N | Ativa/desativa modo de anotações |
+| **Trocar Paleta** | C | Alterna entre 6 cores de notas |
+| **Adicionar Nota** | 1-9 | No modo notas, adiciona número à célula |
+| **Botão Visual** | Mouse/Touch | Clique no botão laranja |
+
+### 🐛 **Problemas Corrigidos**
+
+1. **Fonte dos Números Principais**
+   - **Problema**: Números ficavam pequenos quando notas eram ativadas
+   - **Causa**: Configuração de fonte global no canvas
+   - **Solução**: Configuração específica para cada tipo de renderização
+
+2. **Sistema de Cores Redundante**
+   - **Problema**: ColorSystem não estava sendo usado efetivamente
+   - **Solução**: Remoção completa e integração no NotesSystem
+
+3. **Feedback Visual do Modo Notas**
+   - **Problema**: Botão não indicava claramente quando estava ativo
+   - **Solução**: Cor dinâmica, bordas bold e animação pulse
+
+### 🚀 **Performance**
+- ✅ **Renderização**: Otimizada para diferentes tipos de conteúdo
+- ✅ **Memória**: Redução de código desnecessário
+- ✅ **Responsividade**: Melhor feedback visual em tempo real
+
+---
+
 ## [v0.7.0] - 2025-01-14
 
 ### 🎨 Sistema de Cores Avançado

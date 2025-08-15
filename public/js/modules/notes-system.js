@@ -10,6 +10,18 @@ export class NotesSystem {
         this.isNotesMode = false;
         this.activeCell = null;
         this.maxNotesPerCell = 9;
+        
+        // Sistema de paletas de cores para notas
+        this.colorPalettes = [
+            { name: 'Laranja', color: '#F97316', description: 'Clássico laranja' },
+            { name: 'Azul', color: '#3B82F6', description: 'Azul vibrante' },
+            { name: 'Verde', color: '#10B981', description: 'Verde suave' },
+            { name: 'Roxo', color: '#8B5CF6', description: 'Roxo moderno' },
+            { name: 'Rosa', color: '#EC4899', description: 'Rosa elegante' },
+            { name: 'Vermelho', color: '#EF4444', description: 'Vermelho forte' }
+        ];
+        this.currentPaletteIndex = 0;
+        
         this.setup();
     }
 
@@ -17,6 +29,7 @@ export class NotesSystem {
         this.createNotesToggle();
         this.attachEventListeners();
         this.loadNotesFromStorage();
+        this.loadPaletteFromStorage();
     }
 
     createNotesToggle() {
@@ -33,23 +46,23 @@ export class NotesSystem {
     }
 
     attachEventListeners() {
-        // Tecla Shift para alternar modo notas
+        // Tecla Q para alternar modo notas
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'Shift' && !e.repeat) {
-                this.toggleNotesMode();
-            }
-            
-            // Tecla Q para alternar modo notas
             if (e.key.toLowerCase() === 'q' && !e.ctrlKey && !e.altKey) {
                 e.preventDefault();
                 this.toggleNotesMode();
             }
-        });
-
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'Shift') {
-                // Opcional: desativar automaticamente ao soltar Shift
-                // this.setNotesMode(false);
+            
+            // Tecla N para alternar modo notas
+            if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.altKey) {
+                e.preventDefault();
+                this.toggleNotesMode();
+            }
+            
+            // Tecla C para alternar paleta de cores
+            if (e.key.toLowerCase() === 'c' && !e.ctrlKey && !e.altKey) {
+                e.preventDefault();
+                this.cyclePalette();
             }
         });
 
@@ -70,19 +83,20 @@ export class NotesSystem {
             }
         });
 
-        // Clique em células
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('cell')) {
-                this.handleCellClick(e.target);
-            }
-        });
-
         // Clique no número pad (se existir)
         document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('number-btn') && this.isNotesMode && this.activeCell) {
-                const number = parseInt(e.target.dataset.number);
-                if (number >= 1 && number <= 9) {
-                    this.toggleNote(this.activeCell, number);
+            if (e.target.classList.contains('num-btn') && this.isNotesMode) {
+                // Verificar se há uma célula selecionada no jogo
+                if (this.game.selected && this.game.selected.row !== -1 && this.game.selected.col !== -1) {
+                    const cellValue = this.game.playerBoard[this.game.selected.row][this.game.selected.col];
+                    // Só permitir notas em células vazias
+                    if (cellValue === 0) {
+                        const number = parseInt(e.target.dataset.num);
+                        if (number >= 1 && number <= 9) {
+                            const cellIndex = this.game.selected.row * 9 + this.game.selected.col;
+                            this.toggleNoteByIndex(cellIndex, number);
+                        }
+                    }
                 }
             }
         });
@@ -123,11 +137,26 @@ export class NotesSystem {
         // Atualizar visual do botão usando classes do Tailwind
         if (this.toggleButton) {
             if (enabled) {
-                this.toggleButton.classList.add('bg-orange-500', 'text-white');
-                this.toggleButton.classList.remove('bg-gray-200', 'text-gray-700');
+                // Modo ativo: cor da paleta atual com bold
+                const currentPalette = this.colorPalettes[this.currentPaletteIndex];
+                this.toggleButton.style.backgroundColor = currentPalette.color;
+                this.toggleButton.style.color = 'white';
+                this.toggleButton.style.borderWidth = '3px';
+                this.toggleButton.style.borderColor = currentPalette.color;
+                this.toggleButton.style.fontWeight = 'bold';
+                this.toggleButton.classList.add('notes-active');
+                
+                // Efeito de pulsação para indicar ativo
+                this.toggleButton.style.animation = 'pulse 2s infinite';
             } else {
-                this.toggleButton.classList.remove('bg-orange-500', 'text-white');
-                this.toggleButton.classList.add('bg-gray-200', 'text-gray-700');
+                // Modo inativo: estilo padrão
+                this.toggleButton.style.backgroundColor = '';
+                this.toggleButton.style.color = '';
+                this.toggleButton.style.borderWidth = '';
+                this.toggleButton.style.borderColor = '';
+                this.toggleButton.style.fontWeight = '';
+                this.toggleButton.style.animation = '';
+                this.toggleButton.classList.remove('notes-active');
             }
         }
         
@@ -142,6 +171,121 @@ export class NotesSystem {
         // Notificar o jogo para redesenhar o canvas
         if (this.game && this.game.draw) {
             this.game.draw();
+        }
+    }
+
+    /**
+     * Alterna entre as paletas de cores
+     */
+    cyclePalette() {
+        this.currentPaletteIndex = (this.currentPaletteIndex + 1) % this.colorPalettes.length;
+        const currentPalette = this.colorPalettes[this.currentPaletteIndex];
+        
+        // Salvar preferência
+        this.savePaletteToStorage();
+        
+        // Atualizar botão se modo notas estiver ativo
+        if (this.isNotesMode) {
+            this.setNotesMode(true); // Re-aplicar estilo com nova cor
+        }
+        
+        // Mostrar notificação da paleta atual
+        this.showPaletteNotification(currentPalette);
+        
+        // Redesenhar canvas com nova cor
+        if (this.game && this.game.draw) {
+            this.game.draw();
+        }
+    }
+
+    /**
+     * Obtém a cor atual da paleta
+     */
+    getCurrentPaletteColor() {
+        return this.colorPalettes[this.currentPaletteIndex].color;
+    }
+
+    /**
+     * Toggle de nota por índice da célula
+     */
+    toggleNoteByIndex(cellIndex, number) {
+        if (!this.notesData.has(cellIndex)) {
+            this.notesData.set(cellIndex, new Set());
+        }
+
+        const notes = this.notesData.get(cellIndex);
+        
+        let action;
+        if (notes.has(number)) {
+            notes.delete(number);
+            action = 'remove';
+        } else {
+            notes.add(number);
+            action = 'add';
+        }
+        
+        this.saveNotesToStorage();
+
+        // Dispatch event so HistorySystem can record note changes
+        const event = new CustomEvent('sudoku-notes-changed', {
+            detail: {
+                cellIndex,
+                number,
+                action,
+                notes: Array.from(notes)
+            }
+        });
+        document.dispatchEvent(event);
+        
+        // Redesenhar canvas
+        if (this.game && this.game.draw) {
+            this.game.draw();
+        }
+    }
+
+    /**
+     * Mostra notificação da paleta atual
+     */
+    showPaletteNotification(palette) {
+        const notification = document.createElement('div');
+        notification.className = 'palette-notification fixed top-20 right-4 bg-white border-2 rounded-lg p-3 shadow-lg z-50';
+        notification.style.borderColor = palette.color;
+        notification.innerHTML = `
+            <div class="flex items-center gap-2">
+                <div class="w-4 h-4 rounded-full" style="background-color: ${palette.color}"></div>
+                <span class="font-medium">${palette.name}</span>
+            </div>
+            <div class="text-sm text-gray-600">${palette.description}</div>
+        `;
+        
+        document.body.appendChild(notification);
+
+        setTimeout(() => {
+            notification.remove();
+        }, 2000);
+    }
+
+    /**
+     * Salva paleta atual no localStorage
+     */
+    savePaletteToStorage() {
+        localStorage.setItem('sudoku-notes-palette', this.currentPaletteIndex.toString());
+    }
+
+    /**
+     * Carrega paleta do localStorage
+     */
+    loadPaletteFromStorage() {
+        try {
+            const saved = localStorage.getItem('sudoku-notes-palette');
+            if (saved) {
+                const index = parseInt(saved);
+                if (index >= 0 && index < this.colorPalettes.length) {
+                    this.currentPaletteIndex = index;
+                }
+            }
+        } catch (e) {
+            console.warn('Erro ao carregar paleta:', e);
         }
     }
 

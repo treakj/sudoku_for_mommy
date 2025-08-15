@@ -11,7 +11,6 @@ import { NumberCounter } from './number-counter.js';
 import { NotesSystem } from './notes-system.js';
 import { HistorySystem } from './history-system.js';
 import { HintsSystem } from './hints-system.js';
-import { ColorSystem } from './color-system.js';
 import { 
     getElementById, 
     addClass, 
@@ -87,7 +86,7 @@ export class SudokuGame {
             // Contador de números
             this.numberCounter = new NumberCounter(this);
             
-            // Sistema de notas
+            // Sistema de notas com paletas de cores
             this.notesSystem = new NotesSystem(this);
             
             // Sistema de histórico
@@ -95,9 +94,6 @@ export class SudokuGame {
             
             // Sistema de dicas
             this.hintsSystem = new HintsSystem(this);
-            
-            // Sistema de cores
-            this.colorSystem = new ColorSystem(this);
             
             console.log('✅ Sistemas avançados inicializados com sucesso');
             
@@ -617,15 +613,15 @@ export class SudokuGame {
      * Desenha os números
      */
     drawNumbers() {
-        // Fonte bem maior para números principais
-        this.ctx.font = `bold ${this.cellSize * 0.8}px Arial`;
-        this.ctx.textAlign = 'center';
-        this.ctx.textBaseline = 'middle';
-        
         for (let row = 0; row < 9; row++) {
             for (let col = 0; col < 9; col++) {
                 const number = this.playerBoard[row][col];
                 if (number !== 0) {
+                    // Configurar fonte para números principais (sempre grande)
+                    this.ctx.font = `bold ${this.cellSize * 0.7}px Arial`;
+                    this.ctx.textAlign = 'center';
+                    this.ctx.textBaseline = 'middle';
+                    
                     const x = col * this.cellSize + this.cellSize / 2;
                     const y = row * this.cellSize + this.cellSize / 2;
                     
@@ -658,22 +654,13 @@ export class SudokuGame {
         
         if (!notes || notes.size === 0) return;
         
-        // Configuração para notas bem pequenas (contraste com números principais)
-        this.ctx.font = `${this.cellSize * 0.18}px Arial`;
+        // Configuração para notas pequenas (separada dos números principais)
+        this.ctx.font = `${this.cellSize * 0.2}px Arial`;
         this.ctx.textAlign = 'center';
         this.ctx.textBaseline = 'middle';
         
-        // Verificar se a célula tem cor personalizada para as notas
-        let noteColor = '#F97316'; // Laranja padrão para notas
-        if (this.colorSystem && this.colorSystem.cellColors.has(cellIndex)) {
-            const colorName = this.colorSystem.cellColors.get(cellIndex);
-            const colorData = this.colorSystem.availableColors.find(c => c.name === colorName);
-            if (colorData && colorData.value) {
-                // Usar uma versão mais escura da cor de fundo para as notas
-                noteColor = this.darkenColor(colorData.value, 0.6);
-            }
-        }
-        
+        // Usar cor da paleta atual
+        const noteColor = this.notesSystem.getCurrentPaletteColor();
         this.ctx.fillStyle = noteColor;
         
         // Desenhar notas em grid 3x3
@@ -691,28 +678,7 @@ export class SudokuGame {
     }
 
     /**
-     * Escurece uma cor hexadecimal
-     */
-    darkenColor(hex, factor) {
-        // Remove o #
-        hex = hex.replace('#', '');
-        
-        // Converte para RGB
-        const r = parseInt(hex.substr(0, 2), 16);
-        const g = parseInt(hex.substr(2, 2), 16);
-        const b = parseInt(hex.substr(4, 2), 16);
-        
-        // Escurece multiplicando por fator
-        const newR = Math.round(r * factor);
-        const newG = Math.round(g * factor);
-        const newB = Math.round(b * factor);
-        
-        // Converte de volta para hex
-        return `#${newR.toString(16).padStart(2, '0')}${newG.toString(16).padStart(2, '0')}${newB.toString(16).padStart(2, '0')}`;
-    }
-
-    /**
-     * Desenha a seleção atual com linhas de auxílio
+     * Desenha a seleção atual
      */
     drawSelection() {
         if (this.selected.row >= 0 && this.selected.col >= 0) {
