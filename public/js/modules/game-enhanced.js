@@ -8,7 +8,7 @@ import { Validator } from './validator.js';
 import { getCurrentTranslations } from './translations.js';
 import { HighlightSystem } from './highlight-system.js';
 import { NumberCounter } from './number-counter.js';
-import { NotesSystem } from './notes-system.js';
+import { SmartNotesSystem } from './smart-notes-system.js';
 import { HistorySystem } from './history-system.js';
 import { HintsSystem } from './hints-system.js';
 import { 
@@ -86,8 +86,8 @@ export class SudokuGame {
             // Contador de números
             this.numberCounter = new NumberCounter(this);
             
-            // Sistema de notas com paletas de cores
-            this.notesSystem = new NotesSystem(this);
+            // Sistema de notas com paletas de cores e modo inteligente
+            this.notesSystem = new SmartNotesSystem(this);
             
             // Sistema de histórico
             this.historySystem = new HistorySystem(this);
@@ -411,6 +411,11 @@ export class SudokuGame {
         // Atualizar sistema de notas se uma célula foi preenchida
         if (number !== 0 && this.notesSystem) {
             this.notesSystem.onCellFilled(cellIndex, number);
+        }
+        
+        // Invalidar cache do modo inteligente
+        if (this.notesSystem && this.notesSystem.onBoardChanged) {
+            this.notesSystem.onBoardChanged();
         }
     }
 

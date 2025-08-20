@@ -1,6 +1,6 @@
 @echo off
 echo ========================================
-echo    Deploy do Sudoku para Firebase
+echo    Deploy do Sudoku v0.9.2 para Firebase
 echo ========================================
 echo.
 
