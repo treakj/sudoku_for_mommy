@@ -58,10 +58,10 @@ export class HintsSystem {
     }
 
     createHintsButton() {
-        // Usar o botão de dicas existente no HTML em vez de criar um novo
+        // Garantir que o event listener está funcionando
         this.hintsButton = document.getElementById('hint-btn');
         if (this.hintsButton) {
-            // Remover event listeners existentes e adicionar o nosso
+            // Remover listeners existentes
             this.hintsButton.replaceWith(this.hintsButton.cloneNode(true));
             this.hintsButton = document.getElementById('hint-btn');
             this.hintsButton.addEventListener('click', () => this.getHint());
@@ -134,18 +134,17 @@ export class HintsSystem {
     }
 
     getHint() {
-        // Usar o sistema de dicas do jogo principal
-        if (this.game && this.game.giveHint) {
-            this.game.giveHint();
-            return;
-        }
+        console.log('Getting hint...', { hintsUsed: this.hintsUsed, maxHints: this.maxHints });
         
         if (this.hintsUsed >= this.maxHints) {
+            console.log('Hint limit reached');
             this.showHintLimitMessage();
             return;
         }
 
         const hint = this.findBestHint();
+        console.log('Found hint:', hint);
+        
         if (!hint) {
             this.showNoHintMessage();
             return;
@@ -156,6 +155,8 @@ export class HintsSystem {
         this.updateHintsButton();
         this.displayHint(hint);
         this.toggleHintsPanel(true);
+        
+        console.log('Hint applied, used:', this.hintsUsed);
     }
 
     findBestHint() {
@@ -177,23 +178,32 @@ export class HintsSystem {
     }
 
     analyzeGameState() {
-        const cells = document.querySelectorAll('.cell');
+        // Usar o grid do jogo diretamente em vez de tentar acessar células DOM inexistentes
         const grid = [];
         const possibilities = [];
+        
+        if (!this.game || !this.game.playerBoard) {
+            console.warn('Game state not available for hints');
+            return { grid: [], possibilities: [], cells: [] };
+        }
 
-        // Construir grid e possibilidades
-        for (let i = 0; i < 81; i++) {
-            const value = cells[i].textContent.trim();
-            grid[i] = value ? parseInt(value) : 0;
-            
-            if (!value) {
-                possibilities[i] = this.calculatePossibilities(i, grid);
-            } else {
-                possibilities[i] = [];
+        // Construir grid linear a partir da matriz 2D do jogo
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                const cellIndex = row * 9 + col;
+                const value = this.game.playerBoard[row][col];
+                grid[cellIndex] = value;
+                
+                if (value === 0) {
+                    possibilities[cellIndex] = this.calculatePossibilities(cellIndex, grid);
+                } else {
+                    possibilities[cellIndex] = [];
+                }
             }
         }
 
-        return { grid, possibilities, cells };
+        console.log('Game state analyzed:', { gridLength: grid.length, emptyCell: grid.filter(v => v === 0).length });
+        return { grid, possibilities, cells: [] };
     }
 
     calculatePossibilities(cellIndex, grid) {
@@ -389,28 +399,37 @@ export class HintsSystem {
     }
 
     highlightHintCells(cellIndices) {
-        // Limpar destaques anteriores
-        document.querySelectorAll('.cell').forEach(cell => {
-            cell.classList.remove('hint-highlight');
-        });
-
-        // Destacar células da dica
-        cellIndices.forEach(index => {
-            if (index !== undefined) {
-                const cell = document.querySelectorAll('.cell')[index];
-                if (cell) {
-                    cell.classList.add('hint-highlight');
-                }
+        // Para o canvas game, vamos apenas focar na célula da dica
+        // e deixar o sistema de highlight do jogo lidar com o destaque visual
+        if (cellIndices && cellIndices.length > 0 && this.game) {
+            const mainCellIndex = cellIndices[0];
+            if (mainCellIndex !== undefined) {
+                const row = Math.floor(mainCellIndex / 9);
+                const col = mainCellIndex % 9;
+                this.game.selectCell(row, col);
             }
-        });
+        }
     }
 
     applyCurrentHint() {
-        if (!this.currentHint || this.currentHint.cellIndex === undefined) return;
+        if (!this.currentHint || this.currentHint.cellIndex === undefined) {
+            console.error('No current hint to apply');
+            return;
+        }
 
-        const cell = document.querySelectorAll('.cell')[this.currentHint.cellIndex];
-        if (cell) {
-            // CORREÇÃO: Garantir que dicas sempre coloquem números definitivos
+        const row = Math.floor(this.currentHint.cellIndex / 9);
+        const col = this.currentHint.cellIndex % 9;
+        
+        console.log('Applying hint:', { row, col, number: this.currentHint.number, cellIndex: this.currentHint.cellIndex });
+        
+        // Verificar se a célula está vazia antes de aplicar
+        if (this.game && this.game.playerBoard && this.game.playerBoard[row][col] !== 0) {
+            console.warn('Cannot apply hint to non-empty cell');
+            return;
+        }
+        
+        // Usar o método setNumber do jogo para aplicar a dica
+        if (this.game && this.game.setNumber) {
             // Salvar estado atual do modo notas
             const wasNotesMode = this.game.notesSystem?.isNotesMode || false;
             
@@ -419,20 +438,14 @@ export class HintsSystem {
                 this.game.notesSystem.setNotesMode(false);
             }
             
-            cell.textContent = this.currentHint.number;
+            // Aplicar o número da dica
+            this.game.setNumber(row, col, this.currentHint.number);
             
-            // Notificar outros sistemas
-            const event = new CustomEvent('sudoku-cell-changed', {
-                detail: {
-                    cellIndex: this.currentHint.cellIndex,
-                    previousValue: '',
-                    newValue: this.currentHint.number,
-                    isHint: true
-                }
-            });
-            document.dispatchEvent(event);
-
-            this.animateHintApplication(cell);
+            // Forçar redesenho do canvas
+            if (this.game.draw) {
+                this.game.draw();
+            }
+            
             this.toggleHintsPanel(false);
             
             // Restaurar modo notas após um pequeno delay se estava ativo
@@ -441,6 +454,13 @@ export class HintsSystem {
                     this.game.notesSystem.setNotesMode(true);
                 }, 100);
             }
+            
+            // Selecionar a célula para destacá-la
+            this.game.selectCell(row, col);
+            
+            console.log('Hint applied successfully');
+        } else {
+            console.error('Game setNumber method not available');
         }
     }
 
@@ -489,10 +509,12 @@ export class HintsSystem {
     }
 
     updateHintsButton() {
-        // O botão principal já gerencia seu próprio contador
-        // Apenas desabilitar se necessário
         if (this.hintsButton) {
-            this.hintsButton.disabled = this.hintsUsed >= this.maxHints;
+            const remaining = this.maxHints - this.hintsUsed;
+            this.hintsButton.textContent = `💡 Dica (${remaining})`;
+            this.hintsButton.disabled = remaining <= 0;
+            
+            console.log('Hints button updated:', { used: this.hintsUsed, max: this.maxHints, remaining });
         }
     }
 
@@ -527,16 +549,20 @@ export class HintsSystem {
     }
 
     reset() {
+        console.log('Resetting hints system');
         this.hintsUsed = 0;
         this.currentHint = null;
-        this.updateHintsButton();
-        this.updateHintsStats();
-        this.toggleHintsPanel(false);
         
-        // Limpar destaques
-        document.querySelectorAll('.cell').forEach(cell => {
-            cell.classList.remove('hint-highlight');
-        });
+        // Reconfigurar o botão
+        this.createHintsButton();
+        this.updateHintsButton();
+        
+        // Só atualizar stats se o painel existe
+        if (this.panel) {
+            this.updateHintsStats();
+        }
+        
+        this.toggleHintsPanel(false);
     }
 
     setMaxHints(max) {

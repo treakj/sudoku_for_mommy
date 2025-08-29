@@ -9,8 +9,11 @@ import { getCurrentTranslations } from './translations.js';
 import { HighlightSystem } from './highlight-system.js';
 import { NumberCounter } from './number-counter.js';
 import { SmartNotesSystem } from './smart-notes-system.js';
+import { NotesSystem } from './notes-system.js';
 import { HistorySystem } from './history-system.js';
 import { HintsSystem } from './hints-system.js';
+import { ColorSystem } from './color-system.js';
+import { SelectedNumberIndicator } from './selected-number-indicator.js';
 import { 
     getElementById, 
     addClass, 
@@ -56,6 +59,8 @@ export class SudokuGame {
         this.notesSystem = null;
         this.historySystem = null;
         this.hintsSystem = null;
+        this.colorSystem = null;
+        this.selectedNumberIndicator = null;
         
         this.init();
     }
@@ -94,6 +99,12 @@ export class SudokuGame {
             
             // Sistema de dicas
             this.hintsSystem = new HintsSystem(this);
+            
+            // Sistema de cores
+            this.colorSystem = new ColorSystem(this);
+            
+            // Indicador de número selecionado
+            this.selectedNumberIndicator = new SelectedNumberIndicator(this);
             
             console.log('✅ Sistemas avançados inicializados com sucesso');
             
@@ -213,6 +224,10 @@ export class SudokuGame {
             if (this.colorSystem) {
                 this.colorSystem.reset();
             }
+            
+            if (this.selectedNumberIndicator) {
+                this.selectedNumberIndicator.reset();
+            }
         } catch (error) {
             console.warn('Erro ao resetar sistemas avançados:', error);
         }
@@ -247,6 +262,11 @@ export class SudokuGame {
         getElementById('new-game-btn')?.addEventListener('click', () => this.startNewGame());
         getElementById('reset-btn')?.addEventListener('click', () => this.resetBoard());
         getElementById('hint-btn')?.addEventListener('click', () => this.giveHint());
+        getElementById('color-btn')?.addEventListener('click', () => {
+            if (this.colorSystem) {
+                this.colorSystem.cycleColor();
+            }
+        });
         
         // Difficulty selector
         getElementById('difficulty-select')?.addEventListener('change', (e) => {
@@ -324,12 +344,18 @@ export class SudokuGame {
         
         // Números 1-9 - verificar se modo notas está ativo
         if (/^[1-9]$/.test(key)) {
+            const num = parseInt(key);
+            
             // Se modo notas está ativo, deixar o NotesSystem lidar com isso
             if (this.notesSystem && this.notesSystem.isNotesMode) {
                 return; // NotesSystem já interceptou via seu próprio listener
             }
             
-            const num = parseInt(key);
+            // Integrar com sistema de destaque para mostrar número selecionado
+            if (this.highlightSystem) {
+                this.highlightSystem.selectNumber(num);
+            }
+            
             this.setNumber(this.selected.row, this.selected.col, num);
         }
         
@@ -493,7 +519,7 @@ export class SudokuGame {
     handleGameComplete() {
         // Reduz delay para melhor responsividade
         setTimeout(() => {
-            showModal('success-modal');
+            this.showWinModal();
             this.dispatchGameEvent('complete');
         }, 50);
     }
@@ -502,15 +528,16 @@ export class SudokuGame {
      * Fornece uma dica
      */
     giveHint() {
-        if (this.hintsLeft <= 0) return;
-        
         // Usar sistema de dicas se disponível
         if (this.hintsSystem) {
+            console.log('Using advanced hints system');
             this.hintsSystem.getHint();
             return;
         }
         
-        // Fallback para dica básica
+        // Fallback para dica básica se sistema avançado não disponível
+        console.log('Using basic hint system');
+        if (this.hintsLeft <= 0) return;
         this.giveBasicHint();
     }
 
@@ -689,32 +716,45 @@ export class SudokuGame {
             const x = this.selected.col * this.cellSize;
             const y = this.selected.row * this.cellSize;
             
-            // Desenhar linhas de auxílio (linha e coluna completas)
-            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.1)';
+            // Destacar o quadrante 3x3 primeiro (fundo)
+            const boxRow = Math.floor(this.selected.row / 3) * 3;
+            const boxCol = Math.floor(this.selected.col / 3) * 3;
+            const boxX = boxCol * this.cellSize;
+            const boxY = boxRow * this.cellSize;
+            const boxSize = 3 * this.cellSize;
+            
+            // Preenchimento do quadrante
+            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.15)';
+            this.ctx.fillRect(boxX, boxY, boxSize, boxSize);
+            
+            // Borda do quadrante 3x3
+            this.ctx.strokeStyle = 'rgba(52, 152, 219, 0.4)';
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(boxX + 1, boxY + 1, boxSize - 2, boxSize - 2);
+            
+            // Desenhar linhas de auxílio mais visíveis (linha e coluna completas)
+            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.2)';
             // Linha horizontal
             this.ctx.fillRect(0, y, this.canvas.width, this.cellSize);
             // Linha vertical
             this.ctx.fillRect(x, 0, this.cellSize, this.canvas.height);
             
-            // Destacar o quadrante 3x3
-            const boxRow = Math.floor(this.selected.row / 3) * 3;
-            const boxCol = Math.floor(this.selected.col / 3) * 3;
-            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.05)';
-            this.ctx.fillRect(
-                boxCol * this.cellSize, 
-                boxRow * this.cellSize, 
-                3 * this.cellSize, 
-                3 * this.cellSize
-            );
-            
             // Destacar a célula selecionada
-            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.3)';
+            this.ctx.fillStyle = 'rgba(52, 152, 219, 0.4)';
             this.ctx.fillRect(x, y, this.cellSize, this.cellSize);
             
-            // Borda da célula selecionada
-            this.ctx.strokeStyle = '#3498db';
-            this.ctx.lineWidth = 2;
-            this.ctx.strokeRect(x, y, this.cellSize, this.cellSize);
+            // Borda da célula selecionada mais espessa
+            this.ctx.strokeStyle = '#2980b9';
+            this.ctx.lineWidth = 3;
+            this.ctx.strokeRect(x + 1.5, y + 1.5, this.cellSize - 3, this.cellSize - 3);
+            
+            // Adicionar bordas sutis nas linhas de auxílio
+            this.ctx.strokeStyle = 'rgba(52, 152, 219, 0.3)';
+            this.ctx.lineWidth = 1;
+            // Borda da linha horizontal
+            this.ctx.strokeRect(0, y, this.canvas.width, this.cellSize);
+            // Borda da linha vertical
+            this.ctx.strokeRect(x, 0, this.cellSize, this.canvas.height);
         }
     }
 
@@ -922,5 +962,236 @@ export class SudokuGame {
 
     getDifficulty() {
         return this.difficulty;
+    }
+
+    /**
+     * Mostra modal de confirmação para resposta
+     */
+    showConfirmModal() {
+        const modal = document.getElementById('confirm-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * Esconde modal de confirmação
+     */
+    hideConfirmModal() {
+        const modal = document.getElementById('confirm-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+
+    /**
+     * Mostra a resposta completa do puzzle
+     */
+    showAnswer() {
+        if (!this.solution) {
+            console.warn('Solução não disponível');
+            return;
+        }
+
+        // Preencher tabuleiro com a solução
+        for (let row = 0; row < 9; row++) {
+            for (let col = 0; col < 9; col++) {
+                this.playerBoard[row][col] = this.solution[row][col];
+            }
+        }
+
+        // Redesenhar o canvas
+        this.draw();
+
+        // Mostrar modal de vitória
+        setTimeout(() => {
+            this.showWinModal();
+        }, 500);
+    }
+
+    /**
+     * Mostra modal de vitória
+     */
+    showWinModal() {
+        const modal = document.getElementById('win-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+        }
+    }
+
+    /**
+     * Atualiza o visual do botão de notas
+     */
+    updateNotesButton() {
+        const notesBtn = document.getElementById('notes-btn');
+        if (!notesBtn || !this.notesSystem) return;
+        
+        const isActive = this.notesSystem.isNotesMode;
+        
+        if (isActive) {
+            notesBtn.classList.add('bg-orange-500', 'text-white');
+            notesBtn.classList.remove('bg-purple-500', 'bg-gray-200', 'text-gray-700');
+        } else {
+            notesBtn.classList.remove('bg-orange-500', 'text-white');
+            notesBtn.classList.add('bg-purple-500', 'text-white');
+        }
+    }
+
+    /**
+     * Mostra modal de configurações
+     */
+    showSettingsModal() {
+        // Criar modal se não existir
+        let modal = document.getElementById('settings-modal');
+        if (!modal) {
+            modal = this.createSettingsModal();
+        }
+        modal.classList.remove('hidden');
+    }
+
+    /**
+     * Cria o modal de configurações
+     */
+    createSettingsModal() {
+        const modal = document.createElement('div');
+        modal.id = 'settings-modal';
+        modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50';
+        
+        modal.innerHTML = `
+            <div class="bg-white p-8 rounded-lg shadow-2xl text-center transform transition-all scale-95 max-w-md w-full mx-4">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">⚙️ Configurações</h2>
+                
+                <div class="space-y-4 text-left">
+                    <div class="flex items-center justify-between">
+                        <label class="text-gray-700 font-medium">Dificuldade:</label>
+                        <select id="settings-difficulty" class="border rounded px-3 py-1">
+                            <option value="easy">Fácil</option>
+                            <option value="medium">Médio</option>
+                            <option value="hard">Difícil</option>
+                            <option value="expert">Dificílimo</option>
+                            <option value="insane">Dificílimo Mesmo</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <label class="text-gray-700 font-medium">Dicas por jogo:</label>
+                        <select id="settings-hints" class="border rounded px-3 py-1">
+                            <option value="1">1 dica</option>
+                            <option value="3">3 dicas</option>
+                            <option value="5">5 dicas</option>
+                            <option value="unlimited">Ilimitadas</option>
+                        </select>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <label class="text-gray-700 font-medium">Destaque automático:</label>
+                        <input type="checkbox" id="settings-highlight" class="w-4 h-4" checked>
+                    </div>
+                    
+                    <div class="flex items-center justify-between">
+                        <label class="text-gray-700 font-medium">Som:</label>
+                        <input type="checkbox" id="settings-sound" class="w-4 h-4" checked>
+                    </div>
+                </div>
+                
+                <div class="flex justify-center gap-4 mt-8">
+                    <button id="settings-cancel-btn" class="bg-gray-300 text-gray-800 px-6 py-2 rounded-md font-semibold hover:bg-gray-400">Cancelar</button>
+                    <button id="settings-save-btn" class="bg-blue-600 text-white px-6 py-2 rounded-md font-semibold hover:bg-blue-700">Salvar</button>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        // Event listeners
+        modal.querySelector('#settings-cancel-btn').addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+        
+        modal.querySelector('#settings-save-btn').addEventListener('click', () => {
+            this.saveSettings();
+            modal.classList.add('hidden');
+        });
+        
+        // Fechar clicando no backdrop
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+        
+        // Carregar configurações atuais
+        this.loadSettingsToModal();
+        
+        return modal;
+    }
+
+    /**
+     * Carrega configurações atuais no modal
+     */
+    loadSettingsToModal() {
+        const difficultySelect = document.getElementById('settings-difficulty');
+        const hintsSelect = document.getElementById('settings-hints');
+        const highlightCheck = document.getElementById('settings-highlight');
+        const soundCheck = document.getElementById('settings-sound');
+        
+        if (difficultySelect) difficultySelect.value = this.difficulty;
+        if (hintsSelect) hintsSelect.value = this.hintsLeft === 999 ? 'unlimited' : '3';
+        if (highlightCheck) highlightCheck.checked = this.highlightSystem !== null;
+        if (soundCheck) soundCheck.checked = true; // Default
+    }
+
+    /**
+     * Salva as configurações
+     */
+    saveSettings() {
+        const difficultySelect = document.getElementById('settings-difficulty');
+        const hintsSelect = document.getElementById('settings-hints');
+        const highlightCheck = document.getElementById('settings-highlight');
+        
+        if (difficultySelect && difficultySelect.value !== this.difficulty) {
+            this.difficulty = difficultySelect.value;
+            // Atualizar seletor de dificuldade na interface principal
+            const mainDifficultyBtns = document.querySelectorAll('.btn-difficulty');
+            mainDifficultyBtns.forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.dataset.difficulty === this.difficulty) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+        
+        if (hintsSelect) {
+            const hintsValue = hintsSelect.value;
+            if (hintsValue === 'unlimited') {
+                this.hintsLeft = 999;
+            } else {
+                this.hintsLeft = parseInt(hintsValue);
+            }
+            this.updateHintButton();
+        }
+        
+        // Salvar no localStorage
+        localStorage.setItem('sudoku-settings', JSON.stringify({
+            difficulty: this.difficulty,
+            hints: hintsSelect?.value || '3',
+            highlight: highlightCheck?.checked || true,
+            sound: document.getElementById('settings-sound')?.checked || true
+        }));
+        
+        // Feedback visual
+        const saveBtn = document.getElementById('settings-save-btn');
+        if (saveBtn) {
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = '✅ Salvo!';
+            saveBtn.classList.add('bg-green-600');
+            saveBtn.classList.remove('bg-blue-600');
+            
+            setTimeout(() => {
+                saveBtn.textContent = originalText;
+                saveBtn.classList.remove('bg-green-600');
+                saveBtn.classList.add('bg-blue-600');
+            }, 1000);
+        }
     }
 }

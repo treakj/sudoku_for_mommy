@@ -1,8 +1,8 @@
-# 🧩 Sudoku for Mommy - v0.9
+# 🧩 Sudoku for Mommy - v0.9.4
 
 Um jogo de Sudoku moderno e responsivo com suporte a múltiplos idiomas (Português, Inglês e Japonês).
 
-## 🎮 Recursos da Versão 0.9
+## 🎮 Recursos da Versão 0.9.4
 
 ### 🎨 **Sistema de Paletas de Cores para Notas**
 - **6 Paletas Únicas**: Laranja, Azul, Verde, Roxo, Rosa, Vermelho

@@ -47,8 +47,9 @@ export class HighlightSystem {
                 // Se clicar no mesmo número, remove o destaque
                 this.clearHighlight();
             } else {
-                // Seleciona novo número
+                // Seleciona novo número com feedback visual
                 this.selectNumber(value);
+                this.showCellClickFeedback(cell, value);
             }
         } else {
             // Clicou em célula vazia
@@ -60,6 +61,12 @@ export class HighlightSystem {
         this.selectedNumber = number;
         this.applyHighlight();
         
+        // Disparar evento para o indicador de número selecionado
+        const event = new CustomEvent('number-selected', {
+            detail: { number: number }
+        });
+        document.dispatchEvent(event);
+        
         // Integrar com outros sistemas
         if (this.game.numberCounter) {
             this.game.numberCounter.updateCounterDisplay();
@@ -68,6 +75,71 @@ export class HighlightSystem {
         if (this.game.numberPad) {
             this.game.numberPad.selectedNumber = number;
             this.game.numberPad.updatePadDisplay();
+        }
+    }
+
+    /**
+     * Mostra feedback visual quando uma célula é clicada
+     */
+    showCellClickFeedback(cell, number) {
+        // Criar elemento de feedback
+        const feedback = document.createElement('div');
+        feedback.className = 'cell-click-feedback';
+        feedback.textContent = number;
+        feedback.style.cssText = `
+            position: absolute;
+            pointer-events: none;
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            background: rgba(52, 152, 219, 0.2);
+            border: 2px solid #3498db;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            animation: cellClickPulse 0.6s ease-out forwards;
+        `;
+
+        // Posicionar sobre a célula
+        const rect = cell.getBoundingClientRect();
+        feedback.style.left = (rect.left + rect.width / 2 - 20) + 'px';
+        feedback.style.top = (rect.top + rect.height / 2 - 20) + 'px';
+
+        // Adicionar ao body
+        document.body.appendChild(feedback);
+
+        // Remover após animação
+        setTimeout(() => {
+            if (feedback.parentNode) {
+                feedback.parentNode.removeChild(feedback);
+            }
+        }, 600);
+
+        // Adicionar CSS da animação se não existir
+        if (!document.getElementById('cell-click-feedback-styles')) {
+            const style = document.createElement('style');
+            style.id = 'cell-click-feedback-styles';
+            style.textContent = `
+                @keyframes cellClickPulse {
+                    0% {
+                        transform: scale(0.8);
+                        opacity: 1;
+                    }
+                    50% {
+                        transform: scale(1.2);
+                        opacity: 0.8;
+                    }
+                    100% {
+                        transform: scale(1.5);
+                        opacity: 0;
+                    }
+                }
+            `;
+            document.head.appendChild(style);
         }
     }
 
@@ -210,6 +282,10 @@ export class HighlightSystem {
         });
         
         this.selectedNumber = null;
+        
+        // Disparar evento para limpar o indicador
+        const event = new CustomEvent('selection-cleared');
+        document.dispatchEvent(event);
     }
 
     setHighlightMode(mode) {

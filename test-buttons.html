@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste dos Botões</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        button { margin: 10px; padding: 10px 20px; font-size: 16px; }
+        .log { background: #f0f0f0; padding: 10px; margin: 10px 0; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Teste de Funcionalidade dos Botões</h1>
+    
+    <div>
+        <button id="undo-btn">↶ Desfazer</button>
+        <button id="redo-btn">↷ Refazer</button>
+        <button id="notes-btn">📝 Notas</button>
+        <button id="hint-btn">💡 Dica</button>
+        <button id="color-btn">🎨 Cores</button>
+        <button id="clear-colors-btn">🗑️ Limpar Cores</button>
+        <button id="settings-btn">⚙️ Config</button>
+    </div>
+    
+    <div id="log" class="log">
+        <h3>Log de Eventos:</h3>
+        <div id="log-content"></div>
+    </div>
+    
+    <script>
+        function log(message) {
+            const logContent = document.getElementById('log-content');
+            const timestamp = new Date().toLocaleTimeString();
+            logContent.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+        }
+        
+        // Testar todos os botões
+        document.getElementById('undo-btn').addEventListener('click', () => {
+            log('✅ Botão UNDO clicado - Event listener funcionando!');
+        });
+        
+        document.getElementById('redo-btn').addEventListener('click', () => {
+            log('✅ Botão REDO clicado - Event listener funcionando!');
+        });
+        
+        document.getElementById('notes-btn').addEventListener('click', () => {
+            log('✅ Botão NOTES clicado - Event listener funcionando!');
+        });
+        
+        document.getElementById('hint-btn').addEventListener('click', () => {
+            log('✅ Botão HINT clicado - Event listener funcionando!');
+        });
+        
+        document.getElementById('color-btn').addEventListener('click', () => {
+            log('✅ Botão COLOR clicado - Event listener funcionando!');
+        });
+        
+        document.getElementById('clear-colors-btn').addEventListener('click', () => {
+            log('✅ Botão CLEAR COLORS clicado - Event listener funcionando!');
+        });
+        
+        document.getElementById('settings-btn').addEventListener('click', () => {
+            log('✅ Botão SETTINGS clicado - Event listener funcionando!');
+        });
+        
+        // Testar atalhos de teclado
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'z' && !e.shiftKey) {
+                e.preventDefault();
+                log('⌨️ Atalho Ctrl+Z detectado - Undo via teclado!');
+            }
+            if (e.ctrlKey && (e.key === 'y' || (e.key === 'z' && e.shiftKey))) {
+                e.preventDefault();
+                log('⌨️ Atalho Ctrl+Y detectado - Redo via teclado!');
+            }
+        });
+        
+        log('🚀 Teste iniciado - Clique nos botões ou use Ctrl+Z/Ctrl+Y');
+    </script>
+</body>
+</html>

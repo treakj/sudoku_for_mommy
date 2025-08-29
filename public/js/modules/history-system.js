@@ -27,11 +27,17 @@ export class HistorySystem {
         this.undoBtn = document.getElementById('undo-btn');
         this.redoBtn = document.getElementById('redo-btn');
         
-        // Adicionar event listeners aos botões existentes
+        // Garantir que os event listeners estejam funcionando
         if (this.undoBtn) {
+            // Remover listeners existentes
+            this.undoBtn.replaceWith(this.undoBtn.cloneNode(true));
+            this.undoBtn = document.getElementById('undo-btn');
             this.undoBtn.addEventListener('click', () => this.undo());
         }
         if (this.redoBtn) {
+            // Remover listeners existentes
+            this.redoBtn.replaceWith(this.redoBtn.cloneNode(true));
+            this.redoBtn = document.getElementById('redo-btn');
             this.redoBtn.addEventListener('click', () => this.redo());
         }
         
@@ -97,7 +103,8 @@ export class HistorySystem {
 
         // Escutar mudanças no jogo
         document.addEventListener('sudoku-cell-changed', (e) => {
-            if (this.isRecording) {
+            console.log('Cell changed event received:', e.detail);
+            if (this.isRecording && !e.detail.isUndo && !e.detail.isRedo) {
                 this.recordMove(e.detail);
             }
         });
@@ -199,9 +206,15 @@ export class HistorySystem {
     }
 
     undo() {
-        if (!this.canUndo()) return;
+        console.log('Undo called:', { canUndo: this.canUndo(), currentIndex: this.currentIndex, historyLength: this.history.length });
+        
+        if (!this.canUndo()) {
+            console.log('Cannot undo - no moves available');
+            return;
+        }
 
         const move = this.history[this.currentIndex];
+        console.log('Undoing move:', move);
         this.isRecording = false;
 
         // Restaurar estado anterior
@@ -216,21 +229,19 @@ export class HistorySystem {
                 move.changes.forEach(ch => this.game.notesSystem.applyNoteChange(ch.cellIndex, ch.number, 'add'));
             }
         } else {
-            const cell = this.getCellByIndex(move.cellIndex);
-            if (cell) {
-                cell.textContent = move.previousValue;
+            // Usar o método setNumber do jogo em vez de acessar células DOM
+            const row = Math.floor(move.cellIndex / 9);
+            const col = move.cellIndex % 9;
+            
+            if (this.game && this.game.setNumber) {
+                // Definir temporariamente para não gravar no histórico durante undo
+                const wasRecording = this.isRecording;
+                this.isRecording = false;
                 
-                // Notificar outros sistemas
-                const event = new CustomEvent('sudoku-cell-changed', {
-                    detail: {
-                        cellIndex: move.cellIndex,
-                        previousValue: move.newValue,
-                        newValue: move.previousValue,
-                        isUndo: true
-                    }
-                });
-                document.dispatchEvent(event);
-                this.animateUndo(cell);
+                this.game.setNumber(row, col, parseInt(move.previousValue) || 0);
+                
+                this.isRecording = wasRecording;
+                console.log('Undo applied to game grid');
             }
         }
 
@@ -241,10 +252,16 @@ export class HistorySystem {
     }
 
     redo() {
-        if (!this.canRedo()) return;
+        console.log('Redo called:', { canRedo: this.canRedo(), currentIndex: this.currentIndex, historyLength: this.history.length });
+        
+        if (!this.canRedo()) {
+            console.log('Cannot redo - no future moves available');
+            return;
+        }
 
         this.currentIndex++;
         const move = this.history[this.currentIndex];
+        console.log('Redoing move:', move);
         this.isRecording = false;
 
         if (move.moveType === 'note-add' || move.moveType === 'note-remove') {
@@ -257,22 +274,19 @@ export class HistorySystem {
                 move.changes.forEach(ch => this.game.notesSystem.applyNoteChange(ch.cellIndex, ch.number, 'remove'));
             }
         } else {
-            // Aplicar movimento novamente
-            const cell = this.getCellByIndex(move.cellIndex);
-            if (cell) {
-                cell.textContent = move.newValue;
+            // Usar o método setNumber do jogo em vez de acessar células DOM
+            const row = Math.floor(move.cellIndex / 9);
+            const col = move.cellIndex % 9;
+            
+            if (this.game && this.game.setNumber) {
+                // Definir temporariamente para não gravar no histórico durante redo
+                const wasRecording = this.isRecording;
+                this.isRecording = false;
                 
-                // Notificar outros sistemas
-                const event = new CustomEvent('sudoku-cell-changed', {
-                    detail: {
-                        cellIndex: move.cellIndex,
-                        previousValue: move.previousValue,
-                        newValue: move.newValue,
-                        isRedo: true
-                    }
-                });
-                document.dispatchEvent(event);
-                this.animateRedo(cell);
+                this.game.setNumber(row, col, parseInt(move.newValue) || 0);
+                
+                this.isRecording = wasRecording;
+                console.log('Redo applied to game grid');
             }
         }
 
